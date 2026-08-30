@@ -1,0 +1,1245 @@
+<title>מצפן</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@400;500;700&family=Secular+One&display=swap">
+<style>
+/* ============================================================
+   מצפן — טוקנים
+   פלטה: "קלפי" — קרטון התא כרקע, פתק לבן כאובייקט, דיו כמעט־שחור.
+   ============================================================ */
+:root {
+  color-scheme: light;
+  --ground:      #d3dadf;
+  --panel:       #e8ecee;
+  --panel-2:     #f2f5f6;
+  --map:         #dce2e6;
+  --paper:       #ffffff;
+  --ink:         #14181d;
+  --ink-2:       #4d5962;
+  --ink-3:       #75838d;
+  --rule:        #b3bfc7;
+  --rule-2:      #c6d0d6;
+  --accent:      #5b4bc4;
+  --accent-soft: #e0dcf5;
+  --warn:        #a8580d;
+  --gapline:     #14181d;
+  --banner-bg:   #14181d;
+  --banner-fg:   #edf1f4;
+
+  --seq-1: #cde2fb; --seq-2: #9ec5f4; --seq-3: #6da7ec;
+  --seq-4: #3987e5; --seq-5: #256abf; --seq-6: #184f95; --seq-7: #0d366b;
+
+  --f-display: "Frank Ruhl Libre", "Times New Roman", serif;
+  --f-body:    "Heebo", "Arial Hebrew", Arial, sans-serif;
+  --f-slip:    "Secular One", "Heebo", Arial, sans-serif;
+
+  --r: 3px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground:      #10151a;
+    --panel:       #1a2127;
+    --panel-2:     #222b32;
+    --map:         #151b21;
+    --paper:       #ffffff;
+    --ink:         #eef2f5;
+    --ink-2:       #a7b4bd;
+    --ink-3:       #7c8992;
+    --rule:        #2c363e;
+    --rule-2:      #384349;
+    --accent:      #9085e9;
+    --accent-soft: #2a2748;
+    --warn:        #d99a4e;
+    --gapline:     #e8eef2;
+    --banner-bg:   #222b32;
+    --banner-fg:   #eef2f5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground:      #10151a;
+  --panel:       #1a2127;
+  --panel-2:     #222b32;
+  --map:         #151b21;
+  --paper:       #ffffff;
+  --ink:         #eef2f5;
+  --ink-2:       #a7b4bd;
+  --ink-3:       #7c8992;
+  --rule:        #2c363e;
+  --rule-2:      #384349;
+  --accent:      #9085e9;
+  --accent-soft: #2a2748;
+  --warn:        #d99a4e;
+  --gapline:     #e8eef2;
+  --banner-bg:   #222b32;
+  --banner-fg:   #eef2f5;
+}
+
+/* ============================================================
+   פרימיטיבי RTL — סעיף 6 באפיון. לא לגעת בלי לקרוא אותו.
+   ============================================================ */
+html, body { direction: rtl; }
+.ltr { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+svg text { direction: rtl; unicode-bidi: plaintext; }
+svg text.ltr { direction: ltr; unicode-bidi: isolate; }
+input[type="number"], input[type="url"], input[type="date"], input[type="range"] { direction: ltr; }
+
+/* ============================================================
+   בסיס
+   ============================================================ */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: var(--f-display); font-weight: 700; text-wrap: balance; margin: 0; }
+h1 { font-size: 25px; letter-spacing: -.01em; }
+h2 { font-size: 19px; }
+h3 { font-size: 15px; }
+p { margin: 0; }
+a { color: inherit; }
+button { font-family: inherit; font-size: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+.eyebrow {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.wrap { max-width: 1320px; margin: 0 auto; padding: 0 20px; }
+
+/* ---------- באנר נתוני הדגמה ---------- */
+.demo-banner {
+  background: var(--banner-bg); color: var(--banner-fg);
+  border-bottom: 1px solid var(--rule);
+}
+.demo-banner .wrap {
+  display: flex; gap: 12px; align-items: baseline;
+  padding-top: 9px; padding-bottom: 9px; flex-wrap: wrap;
+}
+.demo-banner strong { font-weight: 700; letter-spacing: .08em; font-size: 11px; }
+.demo-banner span { font-size: 12.5px; opacity: .85; }
+
+/* ---------- מד הכיסוי ---------- */
+.coverage {
+  position: sticky; top: 0; z-index: 40;
+  background: var(--panel); border-bottom: 1px solid var(--rule);
+}
+.coverage .wrap {
+  display: flex; align-items: center; gap: 26px;
+  padding-top: 10px; padding-bottom: 10px; flex-wrap: wrap;
+}
+.brand { display: flex; align-items: baseline; gap: 9px; margin-left: auto; }
+.brand h1 { font-weight: 900; }
+.brand .tag { font-size: 11.5px; color: var(--ink-3); }
+.metric { display: flex; flex-direction: column; gap: 1px; }
+.metric .k { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+.metric .v { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.metric .v small { font-size: 11.5px; color: var(--ink-3); font-weight: 500; }
+
+/* ---------- ניווט ---------- */
+nav.tabs { background: var(--panel); border-bottom: 1px solid var(--rule); }
+nav.tabs .wrap { display: flex; gap: 2px; }
+.tab {
+  appearance: none; background: none; border: 0; border-bottom: 2px solid transparent;
+  padding: 9px 14px 8px; cursor: pointer; font-weight: 500; color: var(--ink-2);
+}
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 700; }
+
+/* ---------- פקדים ---------- */
+.controls {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  padding: 12px 0;
+}
+.seg { display: flex; border: 1px solid var(--rule); border-radius: var(--r); overflow: hidden; background: var(--panel-2); }
+.seg button {
+  appearance: none; background: none; border: 0; padding: 5px 11px; cursor: pointer;
+  font-size: 13px; color: var(--ink-2); border-left: 1px solid var(--rule);
+}
+.seg button:last-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel-2); font-weight: 700; }
+.switch {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  font-size: 13px; padding: 4px 10px 4px 8px; border: 1px solid var(--rule);
+  border-radius: var(--r); background: var(--panel-2); user-select: none;
+}
+.switch input { accent-color: var(--accent); margin: 0; }
+.switch[data-on="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.btn { appearance: none; border: 1px solid var(--rule); border-radius: var(--r); padding: 5px 11px;
+  background: var(--panel-2); cursor: pointer; font-size: 13px; }
+.btn:hover { border-color: var(--accent); }
+.ctl-label { font-size: 12px; color: var(--ink-3); font-weight: 700; letter-spacing: .06em; }
+select {
+  font-family: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--rule);
+  border-radius: var(--r); background: var(--panel-2); color: var(--ink);
+}
+
+/* ---------- פריסה ---------- */
+.stage { display: grid; grid-template-columns: minmax(0,1fr) 372px; gap: 20px; padding-bottom: 40px; align-items: start; }
+@media (max-width: 1080px) { .stage { grid-template-columns: minmax(0,1fr); } }
+.screen[hidden] { display: none; }
+
+.mapcard { background: var(--map); border: 1px solid var(--rule); border-radius: var(--r); padding: 10px; }
+svg.map { display: block; width: 100%; height: auto; }
+
+/* ---------- הפתקים ---------- */
+.note-g { cursor: pointer; transition: transform 900ms cubic-bezier(.22,.68,.28,1); }
+.note-g.no-anim { transition: none; }
+.slip-letters { font-family: var(--f-slip); fill: #14181d; }
+.slip-name { font-family: var(--f-body); font-weight: 500; fill: #2a3238; }
+.note-g .slip-body { fill: var(--paper); stroke: #14181d; stroke-width: 1.6; }
+.note-g.declared .slip-body { fill: none; stroke-dasharray: 5 4; stroke: var(--gapline); stroke-width: 1.6; }
+.note-g.declared .slip-letters { fill: var(--gapline); fill-opacity: .72; }
+.note-g.declared .slip-name { fill: var(--gapline); fill-opacity: .6; }
+.note-g:hover .slip-body, .note-g.sel .slip-body { stroke: var(--accent); stroke-width: 2.6; }
+.gapline { stroke: var(--gapline); fill: none; }
+.gapline.sel { stroke: var(--accent); }
+.axis-line { stroke: var(--rule); stroke-width: 1; }
+.axis-tick { stroke: var(--rule-2); stroke-width: 1; }
+.quad { fill: var(--ink); fill-opacity: .028; }
+.pole { font-family: var(--f-body); font-weight: 700; font-size: 15px; fill: var(--ink-2); }
+.axis-name { font-family: var(--f-display); font-weight: 700; font-size: 16px; fill: var(--ink); }
+.tickno { font-size: 11px; fill: var(--ink-3); font-family: var(--f-body); }
+@media (prefers-reduced-motion: reduce) { .note-g { transition: none; } }
+
+/* ---------- מקרא ---------- */
+.legend { display: flex; gap: 18px; flex-wrap: wrap; padding: 10px 2px 0; font-size: 12.5px; color: var(--ink-2); }
+.legend .item { display: flex; align-items: center; gap: 7px; }
+.legend svg { display: block; }
+
+/* ---------- מגש ---------- */
+.tray { margin-top: 14px; border: 1px dashed var(--rule); border-radius: var(--r); padding: 12px 14px; background: var(--panel); }
+.tray h3 { margin-bottom: 2px; }
+.tray p { font-size: 12.5px; color: var(--ink-3); }
+.tray ul { list-style: none; display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 0; padding: 0; }
+.tray li { border: 1px solid var(--rule); border-radius: var(--r); padding: 4px 10px; background: var(--panel-2); font-size: 13px; }
+.tray li em { font-style: normal; color: var(--ink-3); font-size: 11.5px; }
+
+/* ---------- מגירת הראיות ---------- */
+.drawer { background: var(--panel); border: 1px solid var(--rule); border-radius: var(--r); position: sticky; top: 62px; max-height: calc(100vh - 84px); overflow: auto; }
+.drawer .empty { padding: 26px 18px; color: var(--ink-3); font-size: 13.5px; }
+.dhead { padding: 14px 16px 12px; border-bottom: 1px solid var(--rule); display: flex; gap: 12px; align-items: flex-start; }
+.dhead .grow { flex: 1; min-width: 0; }
+.dclose { appearance: none; background: none; border: 1px solid var(--rule); border-radius: var(--r); width: 26px; height: 26px; cursor: pointer; line-height: 1; }
+.posgrid { display: grid; grid-template-columns: auto 1fr 1fr; gap: 2px 10px; padding: 12px 16px; border-bottom: 1px solid var(--rule); font-size: 13px; align-items: center; }
+.posgrid .hd { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+.posgrid .num { font-weight: 700; font-size: 15px; }
+.posgrid .none { color: var(--ink-3); font-size: 12px; font-weight: 400; }
+.counters { display: flex; gap: 16px; padding: 10px 16px; border-bottom: 1px solid var(--rule); font-size: 12.5px; color: var(--ink-2); }
+.counters b { font-variant-numeric: tabular-nums; }
+
+.ev { border-bottom: 1px solid var(--rule); }
+.ev .raw { padding: 11px 16px 9px; }
+.ev .meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
+.chip { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; padding: 1.5px 6px; border: 1px solid var(--rule); border-radius: 2px; color: var(--ink-2); background: var(--panel-2); }
+.chip.bucket-actual { border-color: var(--ink); color: var(--ink); }
+.chip.bucket-declared { border-style: dashed; }
+.ev h4 { margin: 0; font-size: 13.5px; font-weight: 700; line-height: 1.4; }
+.ev .sum { font-size: 12.5px; color: var(--ink-2); margin-top: 3px; }
+.ev .src { font-size: 11.5px; color: var(--ink-3); margin-top: 5px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tier { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: var(--ink-2); }
+.pip { width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--ink-2); display: inline-block; }
+.pip.on { background: var(--ink-2); }
+.srcref { font-size: 11px; padding: 1px 5px; border: 1px solid var(--rule-2); border-radius: 2px; background: var(--panel-2); }
+.nosrc { color: var(--warn); font-weight: 700; }
+/* סעיף 9 — הפרדה ויזואלית בין הנתון הגולמי לקידוד */
+.ev .coding {
+  background: var(--panel-2); border-top: 1px dashed var(--rule-2);
+  padding: 7px 16px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+  font-size: 11.5px; color: var(--ink-2);
+}
+.ev .coding .lbl { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--ink-3); }
+.ev .coding b { font-variant-numeric: tabular-nums; color: var(--ink); }
+.ev.uncoded .coding { color: var(--warn); }
+
+/* ---------- מסכים משניים ---------- */
+.sheet { background: var(--panel); border: 1px solid var(--rule); border-radius: var(--r); padding: 20px 22px; }
+.sheet + .sheet { margin-top: 16px; }
+.prose > p, .prose > ul { max-width: 64ch; }
+#screen-method .sheet { max-width: 840px; }
+.prose p + p { margin-top: 10px; }
+.prose ul { margin: 8px 0; padding-inline-start: 20px; }
+.prose li { margin: 3px 0; }
+.prose h2 { margin-bottom: 6px; }
+.prose h3 { margin: 16px 0 4px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--rule); }
+th { font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); }
+.tblwrap { overflow-x: auto; }
+code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; background: var(--panel-2); padding: 1px 5px; border-radius: 2px; }
+.formula { display: block; white-space: pre; overflow-x: auto; padding: 10px 12px; background: var(--panel-2); border: 1px solid var(--rule); border-radius: var(--r); margin: 8px 0; direction: ltr; text-align: left; }
+
+/* ---------- סקטוריאליות ---------- */
+.bars { display: grid; gap: 9px; margin-top: 14px; }
+.barrow { display: grid; grid-template-columns: 190px 1fr 56px; gap: 12px; align-items: center; }
+.barrow .nm { font-size: 13.5px; }
+.barrow .nm em { font-style: normal; color: var(--ink-3); font-size: 11.5px; }
+.track { height: 16px; background: var(--panel-2); border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
+.fill { height: 100%;
+  border-start-start-radius: 0; border-end-start-radius: 0;
+  border-start-end-radius: 4px; border-end-end-radius: 4px; }
+.barrow .val { font-weight: 700; font-variant-numeric: tabular-nums; text-align: left; }
+
+/* ---------- משקולות ---------- */
+.wgrid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 14px; }
+.wax { border: 1px solid var(--rule); border-radius: var(--r); padding: 12px 14px; background: var(--panel-2); }
+.wax h3 { font-size: 14px; }
+.wax .poles { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); margin-top: 8px; }
+.wax label { display: block; font-size: 11.5px; color: var(--ink-3); font-weight: 700; margin-top: 8px; }
+.wax input[type="range"] { width: 100%; accent-color: var(--accent); }
+.dist { display: grid; gap: 8px; margin-top: 14px; }
+.drow { display: grid; grid-template-columns: 190px 1fr 60px; gap: 12px; align-items: center; }
+.drow button.nm { appearance: none; background: none; border: 0; text-align: right; cursor: pointer; font-size: 13.5px; padding: 0; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+.drow .nodata { color: var(--ink-3); font-size: 12.5px; grid-column: 2 / -1; }
+</style>
+
+<div class="demo-banner">
+  <div class="wrap">
+    <strong>נתוני הדגמה</strong>
+    <span>כל הסיעות והפריטים במסך הזה בדויים. אין כאן נתון על אף מפלגה אמיתית. הקידוד הוא עבודת עורך אנושי, ועדיין לא נעשה.</span>
+  </div>
+</div>
+
+<div class="coverage">
+  <div class="wrap">
+    <div class="brand">
+      <h1>מצפן</h1>
+      <span class="tag">מה שהוצהר מול מה שנעשה</span>
+    </div>
+    <div class="metric"><span class="k">פריטים בפנקס</span><span class="v" id="m-items">—</span></div>
+    <div class="metric"><span class="k">מהם דרגה 1</span><span class="v" id="m-tier1">—</span></div>
+    <div class="metric"><span class="k">סיעות ממוקמות</span><span class="v" id="m-placed">—</span></div>
+    <div class="metric"><span class="k">כיסוי</span><span class="v" id="m-cov">—</span></div>
+    <label class="switch" id="sw-tier1-wrap" data-on="false">
+      <input type="checkbox" id="sw-tier1">
+      רק דרגה 1
+    </label>
+  </div>
+</div>
+
+<nav class="tabs">
+  <div class="wrap" role="tablist">
+    <button class="tab" role="tab" data-screen="map" aria-selected="true">המפה</button>
+    <button class="tab" role="tab" data-screen="sector" aria-selected="false">סקטוריאליות</button>
+    <button class="tab" role="tab" data-screen="weights" aria-selected="false">משקולות</button>
+    <button class="tab" role="tab" data-screen="method" aria-selected="false">מתודולוגיה</button>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <!-- ============ מסך המפה ============ -->
+  <section class="screen" id="screen-map">
+    <div class="controls">
+      <span class="ctl-label">צירים</span>
+      <select id="axis-x"></select>
+      <select id="axis-y"></select>
+      <span class="ctl-label" style="margin-inline-start:12px">תצוגה</span>
+      <div class="seg" id="seg-mode">
+        <button data-mode="both" aria-pressed="true">שניהם</button>
+        <button data-mode="declared" aria-pressed="false">מוצהר בלבד</button>
+        <button data-mode="actual" aria-pressed="false">בפועל בלבד</button>
+      </div>
+      <label class="switch" id="sw-base-wrap" data-on="false">
+        <input type="checkbox" id="sw-base">
+        כלול מיקום בסיס
+      </label>
+      <button class="btn" id="btn-replay">הרץ שוב</button>
+    </div>
+
+    <div class="stage">
+      <div>
+        <div class="mapcard">
+          <svg class="map" id="map" viewBox="0 0 1000 1000" role="img" aria-label="מפת מיקומים דו־ממדית"></svg>
+        </div>
+        <div class="legend">
+          <span class="item">
+            <svg width="30" height="20"><rect x="1" y="2" width="28" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="5 4"></rect></svg>
+            מוצהר
+          </span>
+          <span class="item">
+            <svg width="30" height="20"><rect x="1" y="2" width="28" height="16" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.6"></rect></svg>
+            בפועל
+          </span>
+          <span class="item">
+            <svg width="30" height="20"><line x1="2" y1="10" x2="28" y2="10" stroke="currentColor" stroke-width="3"></line></svg>
+            הקו מחבר בין השניים. ככל שהוא עבה יותר, הפער גדול יותר
+          </span>
+          <span class="item" id="legend-base" hidden>המיקום כולל שקלול היסטורי, לא רק הקדנציה הנוכחית</span>
+        </div>
+
+        <div class="tray" id="tray"></div>
+      </div>
+
+      <aside class="drawer" id="drawer">
+        <div class="empty">בחר פתק כדי לראות את הראיות שהפיקו את מיקומו.</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ מסך סקטוריאליות ============ -->
+  <section class="screen" id="screen-sector" hidden>
+    <div class="sheet" style="margin-top:12px">
+      <span class="eyebrow">ציר חמישי</span>
+      <h2>סקטוריאליות</h2>
+      <p class="prose" style="margin-top:6px;color:var(--ink-2);font-size:13.5px">
+        באיזו מידה הפעילות מכוונת להעברת משאבים לקהל מוגדר, לעומת כלל הציבור. המדד יושב במסך נפרד ובכוונה: הוא אינו מקודד לגודל הסמן או לצבעו במפה הראשית.
+        הסולם נע מאפס עד מאה. הסדר כאן משקף את ערך המדד בלבד, ואינו דירוג של מפלגות.
+      </p>
+      <div class="bars" id="sector-bars"></div>
+    </div>
+  </section>
+
+  <!-- ============ מסך המשקולות ============ -->
+  <section class="screen" id="screen-weights" hidden>
+    <div class="sheet" style="margin-top:12px">
+      <span class="eyebrow">מנוע ההעדפות</span>
+      <h2>המשקולות שלך</h2>
+      <p class="prose" style="margin-top:6px;color:var(--ink-2);font-size:13.5px">
+        סמן את עמדתך בכל ציר, ואת מידת החשיבות שאתה מייחס לו. המערכת מחשבת מרחק בין העדפותיך לבין המיקום <strong>בפועל</strong> של כל סיעה.
+        זו אינה רשימה מדורגת: הסיעות מוצגות בסדר קבוע, וכל תוצאה נפתחת חזרה אל הראיות שהפיקו אותה.
+      </p>
+      <div class="wgrid" id="wgrid"></div>
+    </div>
+    <div class="sheet">
+      <h2>מרחק לכל סיעה</h2>
+      <p style="font-size:12.5px;color:var(--ink-3);margin-top:4px">סולם המרחק נע מאפס עד מאתיים. סדר ההצגה קבוע ואינו תלוי בתוצאה.</p>
+      <div class="dist" id="dist"></div>
+    </div>
+  </section>
+
+  <!-- ============ מסך המתודולוגיה ============ -->
+  <section class="screen" id="screen-method" hidden>
+    <div class="sheet prose" style="margin-top:12px">
+      <span class="eyebrow">פורסם לפני הנתונים</span>
+      <h2>מתודולוגיה</h2>
+      <p style="margin-top:8px">
+        לכל סיעה מחושבים שני מיקומים על אותה מפה: איפה היא מציבה את עצמה לפי הצהרותיה, ואיפה הרקורד שלה מציב אותה. הפער בין השניים הוא המוצר.
+        כל מיקום נגזר מפריטי ראיה בודדים, שכל אחד מהם נושא תאריך, מקור בר־הפניה ודירוג אמינות. אין ראיות, אין נקודה.
+      </p>
+      <h3>הצירים</h3>
+      <div class="tblwrap"><table id="axis-table"></table></div>
+      <h3>דירוג מקורות</h3>
+      <div class="tblwrap"><table id="tier-table"></table></div>
+      <p style="font-size:12.5px;color:var(--ink-2);margin-top:8px">
+        דרגה 2 מחייבת שני מקורות לפחות משני גופים שונים, שניהם עם קישור. פריט בלי מקור נספר ככיסוי, אך אינו משפיע על המיקום.
+      </p>
+      <h3>שיטת החישוב</h3>
+      <p>לכל פריט מחושבת משיכה, ולכל דלי מחושב ממוצע משוקלל של המשיכות לפי עוצמתן:</p>
+      <code class="formula">pull = direction &times; magnitude &times; tier_multiplier
+position = &Sigma;(pull&#8202;&times;&#8202;magnitude) / &Sigma;(magnitude)</code>
+      <p style="font-size:12.5px;color:var(--ink-2)">
+        התוצאה חסומה בטווח שבין מינוס מאה למאה. נדרשים שני פריטים מקודדים לפחות בכל דלי ובכל ציר, אחרת אין נקודה.
+        פריט שלא קודד נספר בכיסוי ואינו נכנס לחישוב. סיעה בלי נקודה יורדת למגש הטרם־מקוטלגות ומוצגת בשמה: היעדר נקודה הוא נתון, לא תקלה.
+      </p>
+      <h3>מיקום הבסיס</h3>
+      <p style="font-size:13px">
+        מיקום הבסיס מייצג את הקו ההיסטורי של הסיעה מעבר לקדנציה הנוכחית. הוא יושב במבנה נפרד מפריטי הראיה, כבוי כברירת מחדל, ונכנס לחישוב במשקל של עשרים אחוז בלבד.
+        בסיס בלי נימוק בטקסט חופשי ובלי מקור אחד לפחות אינו נטען כלל.
+      </p>
+      <h3>הפרדה בין נתון לקידוד</h3>
+      <p style="font-size:13px">
+        בכל כרטיס ראיה, החלק העליון הוא הנתון הגולמי כפי שהוא במקור. החלק התחתון, המסומן בנפרד, הוא הקידוד: כיוון, עוצמה, ומי קידד. הפרויקט אינו מציג את הקידוד כאילו הוא חלק מהמקור.
+      </p>
+      <h3>מי מקדד</h3>
+      <p style="font-size:13px" id="coder-line"></p>
+      <h3>מה הכלי הזה לא עושה</h3>
+      <ul style="font-size:13px">
+        <li>לא נותן ציון סופי למפלגה</li>
+        <li>לא ממליץ למי להצביע</li>
+        <li>לא מדרג מפלגות ברשימה מהטובה לגרועה</li>
+        <li>לא מתיימר לנטרליות. הוא מתיימר לשקיפות: כל מסקנה נגזרת מפריטים שאפשר לפתוח ולבדוק</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<script>
+"use strict";
+/* ================================================================
+   מצפן — מנוע
+   הנתונים כאן בדויים. המנוע אמיתי: כל מיקום מחושב מפריטי ראיה
+   דרך הנוסחה בסעיף 3.5 באפיון, ולא נקבע מראש.
+   ================================================================ */
+
+const CODER = "עורך יחיד";
+const CODER_NOTE = "עורך יחיד. הקידוד נעשה ידנית ולא בכלים אוטומטיים.";
+
+const AXES = {
+  security:       { key:"security",       name:"מדיני־ביטחוני", pos:"ימין",              neg:"שמאל" },
+  economy:        { key:"economy",        name:"כלכלי",         pos:"שוק חופשי",         neg:"חלוקה מחדש" },
+  religion_state: { key:"religion_state", name:"דת ומדינה",     pos:"דתי",               neg:"חילוני" },
+  governance:     { key:"governance",     name:"משטר ומוסדות",  pos:"ריכוז כוח בבחירים", neg:"ביזור וביקורת" }
+};
+const AXIS_KEYS = ["security","economy","religion_state","governance"];
+
+const TIER_MULT = { 1:1.00, 2:0.65, 3:0.35 };
+const BUCKET_OF = { platform:"declared", statement:"declared", vote:"actual", law:"actual", budget:"actual", agreement:"actual" };
+const TYPE_HE   = { platform:"מצע", statement:"הצהרה", vote:"הצבעה", law:"חקיקה", budget:"תקציב", agreement:"הסכם" };
+const BASE_W    = 0.2;
+
+/* ---------------- ישויות ---------------- */
+const FACTIONS = [
+  { faction_id:"f1", name:"התנועה החופשית", letters:"אב", knesset_num:26 },
+  { faction_id:"f2", name:"ברית הרווחה",    letters:"גד", knesset_num:26 },
+  { faction_id:"f3", name:"הבית המסורתי",   letters:"הו", knesset_num:26 },
+  { faction_id:"f4", name:"מפלגת האזרחים",  letters:"זח", knesset_num:26 },
+  { faction_id:"f5", name:"רשימת העצמאות",  letters:"טי", knesset_num:26 },
+  { faction_id:"f6", name:"הרשימה החדשה",   letters:null, knesset_num:26 },
+  { faction_id:"f7", name:"תנועת הצפון",    letters:"כל", knesset_num:26 },
+  { faction_id:"f8", name:"שורשים",         letters:"מנ", knesset_num:26, no_platform:true }
+];
+const F = Object.fromEntries(FACTIONS.map(f => [f.faction_id, f]));
+
+const PERSONS = [
+  { person_id:"p1", name:"א׳ בר־און" },
+  { person_id:"p2", name:"ל׳ נחמיאס" },
+  { person_id:"p3", name:"ר׳ סבן" }
+];
+/* p3 עבר סיעה באמצע הקדנציה. ההצבעות שלו מיוחסות לפי תאריך ההצבעה. */
+const MEMBERSHIPS = [
+  { person_id:"p1", faction_id:"f1", start_date:"2025-01-01", end_date:null },
+  { person_id:"p2", faction_id:"f2", start_date:"2025-01-01", end_date:null },
+  { person_id:"p3", faction_id:"f5", start_date:"2025-01-01", end_date:"2025-11-30" },
+  { person_id:"p3", faction_id:"f6", start_date:"2025-12-01", end_date:null }
+];
+function factionAt(person_id, date) {
+  const m = MEMBERSHIPS.find(m =>
+    m.person_id === person_id && m.start_date <= date && (m.end_date === null || date <= m.end_date));
+  return m ? m.faction_id : null;
+}
+
+/* ---------------- פריטי ראיה ---------------- */
+const EVIDENCE = [];
+let _eid = 0;
+function ev(fid, axis, type, title, summary, date, tier, dir, mag, o) {
+  o = o || {};
+  _eid++;
+  EVIDENCE.push({
+    id: "e" + _eid,
+    faction_id: fid,
+    person_id: o.person || null,
+    axis, type,
+    bucket: BUCKET_OF[type],
+    title, summary, date,
+    source_url: o.nosrc ? null : "demo://" + type + "/" + _eid,
+    source_tier: tier,
+    amount_nis: o.amount != null ? o.amount : null,
+    stance: o.stance || null,
+    cohesion: o.cohesion != null ? o.cohesion : null,
+    contested_topic: !!o.contested,
+    direction: dir,
+    magnitude: mag,
+    coded_by: dir === null ? null : CODER,
+    coded_at: dir === null ? null : "2026-08-20"
+  });
+}
+
+/* --- f1 התנועה החופשית --- */
+ev("f1","economy","platform","מצע 2026: הפחתת מס חברות לשמונה עשרה אחוז","סעיף המצע קובע יעד להורדת שיעור המס על רווחי חברות, בלי מקור תקציבי מוצהר.","2026-06-14",1,+1,90);
+ev("f1","economy","statement","נאום יו״ר הסיעה בכנס העסקים השנתי","קריאה לצמצום הרגולציה על יבוא ולביטול ועדות מחירים.","2026-05-02",2,+1,84);
+ev("f1","economy","vote","הצבעה בעד ביטול פיקוח מחירים על מוצרי חלב","הסרת הפיקוח מעבירה את קביעת המחיר ליצרנים ולרשתות.","2026-03-11",1,+1,75,{stance:"for",cohesion:0.94});
+ev("f1","economy","budget","תמיכה בקיצוץ רוחבי במשרדי הממשלה","קיצוץ אחיד המקטין את היקף השירות הציבורי בכל המשרדים.","2026-01-28",1,+1,65,{amount:-2400000000});
+ev("f1","economy","vote","הצבעה נגד העלאת שכר המינימום","התנגדות להעלאה מדורגת של שכר המינימום במשק.","2025-12-09",1,+1,70,{stance:"against",cohesion:0.88});
+ev("f1","economy","vote","הצבעה בעד הרחבת סבסוד מעונות יום","הרחבת הסבסוד לאמהות עובדות. פריט הפועל בכיוון ההפוך לשאר הרקורד בציר.","2026-02-17",2,-1,35,{stance:"for",cohesion:0.71});
+ev("f1","security","platform","מצע 2026: החלת ריבונות בבקעת הירדן","הצהרה על סיפוח שטח מוגדר בלי מסגרת של הסכם.","2026-06-14",1,+1,85);
+ev("f1","security","statement","ריאיון: אין משא ומתן על גבולות","עמדה שהוצהרה בשידור, בלי תמלול מלא.","2026-04-21",2,+1,70);
+ev("f1","security","vote","הצבעה בעד חוק ההסדרה","הכשרה בדיעבד של בנייה בשטח.","2026-02-03",1,+1,80,{stance:"for",cohesion:0.97});
+ev("f1","security","law","יוזמת חוק להרחבת סמכויות מנהליות בשטח","הצעת חוק פרטית שהניחו חברי הסיעה.","2025-11-18",1,+1,65);
+ev("f1","religion_state","platform","מצע: חופש דת ומצפון, תחבורה ציבורית בשבת","סעיף מצע התומך בהפעלת תחבורה ציבורית בסופי שבוע.","2026-06-14",1,-1,55);
+ev("f1","religion_state","statement","הצהרת דובר הסיעה בנושא נישואים אזרחיים","תמיכה במסלול אזרחי בלי לפרט מנגנון.","2026-03-30",3,-1,45);
+ev("f1","religion_state","vote","הצבעה נגד חוק המרכולים","התנגדות להגבלת פתיחת עסקים בשבת.","2025-10-22",1,-1,60,{stance:"against",cohesion:0.83});
+ev("f1","religion_state","agreement","סעיף בהסכם קואליציוני: שימור הסטטוס קוו","הסעיף מחייב את הסיעה שלא לקדם שינוי בנושאי דת ומדינה.","2025-09-15",1,+1,30);
+ev("f1","governance","vote","הצבעה בעד פסקת ההתגברות","אפשרות לחקיקה מחדש של חוק שנפסל.","2026-01-14",1,+1,55,{stance:"for",cohesion:0.9});
+ev("f1","governance","vote","הצבעה נגד הרחבת סמכויות הייעוץ המשפטי","צמצום מעמד חוות הדעת המשפטית המחייבת.","2025-12-23",2,+1,45,{stance:"against",cohesion:0.79});
+ev("f1","sectorial","budget","העברה ייעודית לאשכול רשויות מקומיות","העברה לקבוצת רשויות מוגדרת מראש.","2026-02-25",1,+1,20,{amount:180000000});
+ev("f1","sectorial","budget","תמיכה בקרן מלגות לבוגרי שירות","הטבה לקהל מוגדר, בהיקף קטן ביחס לתקציב.","2025-11-05",2,+1,15,{amount:60000000});
+
+/* --- f2 ברית הרווחה --- */
+ev("f2","economy","platform","מצע 2026: הרחבת סל הבריאות במימון ציבורי","הגדלת ההוצאה הציבורית על בריאות ומימון מהמסים הכלליים.","2026-06-11",1,-1,75);
+ev("f2","economy","statement","מסיבת עיתונאים: מס עושר על הון פיננסי","הצגת מתווה מיסוי על צבירות הון גדולות.","2026-05-19",2,-1,80);
+ev("f2","economy","vote","הצבעה בעד העלאת קצבאות נכות","העלאה רוחבית של הקצבה הבסיסית.","2026-04-07",1,-1,70,{stance:"for",cohesion:0.96});
+ev("f2","economy","budget","דרישה להגדלת תקציב הדיור הציבורי","בקשה לתוספת לרכישת מלאי דירות בהשכרה ציבורית.","2026-01-20",1,-1,65,{amount:900000000});
+ev("f2","economy","vote","הצבעה נגד הפרטת נמל","התנגדות להעברת תפעול לידיים פרטיות.","2025-12-02",1,-1,60,{stance:"against",cohesion:0.91});
+ev("f2","security","platform","מצע 2026: הסדר מדיני מבוסס שתי מדינות","סעיף מצע התומך בהסדר קבע מוסכם.","2026-06-11",1,-1,70);
+ev("f2","security","statement","נאום במליאה על מסגרת אזורית","קריאה למהלך אזורי רחב.","2026-03-04",2,-1,55);
+ev("f2","security","vote","הצבעה נגד חוק ההסדרה","התנגדות להכשרה בדיעבד.","2026-02-03",1,-1,65,{stance:"against",cohesion:0.93});
+ev("f2","security","vote","הצבעה בעד ועדת חקירה ממלכתית","תמיכה בהקמת ועדה בסמכויות מלאות.","2025-10-14",2,-1,40,{stance:"for",cohesion:0.87});
+ev("f2","religion_state","platform","מצע 2026: הכרה בנישואים אזרחיים","סעיף מצע לפתיחת מסלול רישום אזרחי.","2026-06-11",1,-1,70);
+ev("f2","religion_state","statement","הצהרה בכנס בנושא גיוס שוויוני","עמדה בעד חובת שירות אחידה.","2026-04-28",2,-1,60,{contested:true});
+ev("f2","religion_state","vote","הצבעה בעד חוק המרכולים","תמיכה בהסרת ההגבלה על פתיחת עסקים בשבת.","2025-10-22",1,-1,65,{stance:"for",cohesion:0.9});
+ev("f2","religion_state","law","יוזמת חוק להפרדת שירותי הדת מהמדינה","הצעת חוק פרטית להעברת שירותי דת לגופים וולונטריים.","2026-01-08",1,-1,60);
+ev("f2","governance","vote","הצבעה נגד פסקת ההתגברות","התנגדות לאפשרות חקיקה מחדש של חוק שנפסל.","2026-01-14",1,-1,70,{stance:"against",cohesion:0.95});
+ev("f2","governance","vote","הצבעה בעד חיזוק מעמד מבקר המדינה","הרחבת סמכויות ביקורת ותקציב הביקורת.","2025-11-26",1,-1,55,{stance:"for",cohesion:0.89});
+ev("f2","sectorial","budget","תוספת לקרן סיוע לשכר דירה","הטבה רוחבית לפי מבחן הכנסה, לא לפי השתייכות.","2026-01-20",1,+1,25,{amount:400000000});
+ev("f2","sectorial","budget","מענק לרשויות בפריפריה","העברה לפי מדד חברתי־כלכלי ולא לפי קהילה.","2025-12-15",2,+1,30,{amount:250000000});
+
+/* --- f3 הבית המסורתי — הפער הגדול --- */
+ev("f3","economy","platform","מצע 2026: צמצום ההתערבות הממשלתית במשק","סעיף מצע המצהיר על קו כלכלי של שוק חופשי.","2026-06-09",1,+1,60);
+ev("f3","economy","statement","ריאיון ליו״ר הסיעה: אנחנו מפלגה כלכלית ימנית","ציטוט מראיון, בלי תמלול מלא ובלי הקשר תקציבי.","2026-05-25",3,+1,55);
+ev("f3","economy","budget","תוספת ייעודית למוסדות חינוך מוכר שאינו רשמי","העברה תקציבית לרשת מוסדות המשרתת ציבור מוגדר, מחוץ לנוסחת ההקצאה הכללית.","2026-03-18",1,-1,85,{amount:1200000000,contested:true});
+ev("f3","economy","budget","העברה תקציבית לקצבאות לומדים","תמיכה חודשית ישירה לקהל מוגדר, ממומנת מהתקציב הכללי.","2026-02-11",1,-1,80,{amount:620000000,contested:true});
+ev("f3","economy","vote","הצבעה נגד התניית תקציב בלימודי ליבה","הסרת התנאי מותירה את המימון הציבורי בלי דרישת תוכנית לימודים.","2025-12-16",1,-1,55,{stance:"against",cohesion:0.98,contested:true});
+ev("f3","economy","vote","הצבעה בעד הפחתת מס על מוצרי יסוד","הורדת מס עקיפה, בכיוון ההפוך לשאר הרקורד בציר.","2026-04-14",2,+1,30,{stance:"for",cohesion:0.8});
+ev("f3","security","platform","מצע 2026: שלמות הארץ","סעיף מצע המצהיר על התנגדות לוויתורים טריטוריאליים.","2026-06-09",1,+1,70);
+ev("f3","security","statement","נאום בכנס התנועה","הצהרה כללית בלי מנגנון מדיניות.","2026-05-06",2,+1,60);
+ev("f3","security","vote","הצבעה בעד חוק ההסדרה","תמיכה בהכשרה בדיעבד.","2026-02-03",1,+1,65,{stance:"for",cohesion:0.96});
+ev("f3","security","agreement","סעיף בהסכם קואליציוני: הרחבת התיישבות","סעיף מחייב בהסכם, המסווג כפועל ולא כמוצהר.","2025-09-15",1,+1,55);
+ev("f3","religion_state","platform","מצע 2026: חיזוק הזהות היהודית במרחב הציבורי","סעיף מצע רחב בלי מנגנון אכיפה מוגדר.","2026-06-09",1,+1,80);
+ev("f3","religion_state","statement","נאום בכנס רבני התנועה","הצהרה על שמירת מעמד ההלכה בחקיקה.","2026-04-02",2,+1,70);
+ev("f3","religion_state","agreement","סעיף בהסכם קואליציוני: הסדרת מעמד תלמידי ישיבות","סעיף מחייב הקובע פטור לקהל מוגדר.","2025-09-15",1,+1,90,{contested:true});
+ev("f3","religion_state","vote","הצבעה בעד חוק המרכולים","תמיכה בהגבלת פתיחת עסקים בשבת.","2025-10-22",1,+1,75,{stance:"for",cohesion:0.99});
+ev("f3","governance","vote","הצבעה בעד פסקת ההתגברות","תמיכה באפשרות חקיקה מחדש של חוק שנפסל.","2026-01-14",1,+1,60,{stance:"for",cohesion:0.97});
+ev("f3","governance","vote","הצבעה בעד צמצום עילת הסבירות","פריט ללא קישור למקור. נספר בכיסוי ואינו משפיע על המיקום.","2025-11-11",1,+1,50,{stance:"for",nosrc:true});
+ev("f3","sectorial","budget","תוספת ייעודית לרשת מוסדות קהילתית","ההעברה מוגדרת לפי השתייכות ולא לפי מבחן צורך.","2026-03-18",1,+1,88,{amount:1200000000});
+ev("f3","sectorial","agreement","סעיף בהסכם: תקציבים ייעודיים מוסכמים מראש","הסעיף מקצה סכום שנתי קבוע לקהל מוגדר.","2025-09-15",1,+1,90,{amount:800000000});
+ev("f3","sectorial","budget","מענק השתתפות בארנונה למוסדות","הטבה המוגבלת לסוג מוסד אחד.","2026-01-30",2,+1,80,{amount:140000000});
+
+/* --- f4 מפלגת האזרחים --- */
+ev("f4","economy","platform","מצע 2026: משק פתוח עם רשת ביטחון","סעיף מצע המשלב פתיחת שווקים עם קצבאות ממוקדות.","2026-06-16",1,+1,35);
+ev("f4","economy","statement","הרצאה בפורום כלכלי","עמדה מתונה בלי יעד מספרי.","2026-05-12",2,+1,25);
+ev("f4","economy","vote","הצבעה בעד רפורמת הייבוא","הסרת חסמים על יבוא מקביל.","2026-03-25",1,+1,45,{stance:"for",cohesion:0.84});
+ev("f4","economy","vote","הצבעה בעד הרחבת מענק עבודה","הגדלת המענק לעובדים בשכר נמוך.","2026-02-04",1,-1,30,{stance:"for",cohesion:0.76});
+ev("f4","economy","budget","תמיכה במסגרת תקציב מאוזן","עמידה על תקרת גירעון.","2026-01-21",2,+1,20);
+ev("f4","security","platform","מצע 2026: ניהול הסכסוך בלי הכרעה","סעיף מצע הנמנע מהצהרה על גבולות קבע.","2026-06-16",1,+1,20);
+ev("f4","security","statement","ריאיון בתוכנית אקטואליה","עמדה מעורפלת, מקור בודד.","2026-04-09",3,+1,10);
+ev("f4","security","vote","הצבעה בעד ועדת חקירה ממלכתית","תמיכה בהקמת ועדה.","2025-10-14",2,-1,25,{stance:"for",cohesion:0.7});
+ev("f4","security","vote","הצבעה בעד תקציב הביטחון","אישור התוספת השנתית.","2026-01-27",1,+1,30,{stance:"for",cohesion:0.86});
+ev("f4","governance","platform","מצע 2026: חיזוק הביקורת השיפוטית","סעיף מצע התומך בשמירת סמכות בג״ץ.","2026-06-16",1,-1,50);
+ev("f4","governance","statement","נאום במליאה על חוקי היסוד","קריאה להליך חקיקה מוסכם.","2026-03-17",2,-1,40);
+ev("f4","governance","vote","הצבעה נגד פסקת ההתגברות","התנגדות לחקיקה מחדש של חוק שנפסל.","2026-01-14",1,-1,55,{stance:"against",cohesion:0.88});
+ev("f4","governance","vote","הצבעה בעד חוק יסוד החקיקה","עיגון הליכי חקיקה ברוב מיוחד.","2025-11-04",2,-1,35,{stance:"for",cohesion:0.74});
+ev("f4","sectorial","budget","תמיכה בקרן מחקר תחרותית","הקצאה לפי קול קורא פתוח לכלל הציבור.","2026-02-19",1,+1,10,{amount:120000000});
+ev("f4","sectorial","budget","מענק רוחבי לגני ילדים","הטבה כללית בלי הבחנה בין קהלים.","2025-12-08",2,+1,8,{amount:300000000});
+
+/* --- f5 רשימת העצמאות --- */
+ev("f5","economy","platform","מצע 2026: מדינה קטנה, מסים נמוכים","סעיף מצע המצהיר על צמצום ההוצאה הציבורית.","2026-06-12",1,+1,70);
+ev("f5","economy","statement","ריאיון במוסף כלכלי","הצהרה כללית, מקור בודד בלי תמלול.","2026-05-28",3,+1,60);
+ev("f5","economy","budget","העברה ייעודית לתעשייה באזורי עדיפות","סבסוד ישיר למפעלים לפי מיקום גאוגרפי.","2026-03-09",1,-1,40,{amount:450000000});
+ev("f5","economy","vote","הצבעה בעד הרחבת סובסידיות לחקלאות","תמיכה במחיר מטרה לענפים מוגדרים.","2026-02-24",1,-1,35,{stance:"for",cohesion:0.82});
+ev("f5","economy","vote","הצבעה בעד הפחתת מדרגות מס הכנסה","הורדת שיעורי המס בשכבות הביניים.","2025-12-18",1,+1,55,{stance:"for",cohesion:0.9});
+ev("f5","security","platform","מצע 2026: הכרעה צבאית","סעיף מצע הקובע יעד של הכרעה ולא הסדר.","2026-06-12",1,+1,90);
+ev("f5","security","statement","נאום בכנס ביטחוני","הצהרה בעלת אותו קו, בשני כלי תקשורת.","2026-04-16",2,+1,80);
+ev("f5","security","vote","הצבעה בעד חוק ההסדרה","תמיכה בהכשרה בדיעבד.","2026-02-03",1,+1,85,{stance:"for",cohesion:0.95});
+ev(null,"security","vote","הצבעה בעד תקציב הביטחון","הצבעת חבר הכנסת שעבר סיעה בהמשך הקדנציה. מיוחסת לסיעה שבה היה ביום ההצבעה.","2025-10-28",1,+1,60,{person:"p3",stance:"for",cohesion:0.9});
+ev("f5","security","law","יוזמת חוק להחמרת ענישה","הצעת חוק פרטית להגדלת עונשי מינימום.","2025-11-19",1,+1,70);
+/* פריט יחיד בציר דת ומדינה: לא מספיק לנקודה */
+ev("f5","religion_state","vote","הצבעה נגד חוק המרכולים","פריט בודד בציר. לפי הכלל, אין ממנו נקודה.","2025-10-22",2,+1,40,{stance:"against",cohesion:0.6});
+ev("f5","sectorial","budget","סבסוד לפי אזור עדיפות לאומית","הקצאה לפי קריטריון גאוגרפי מוגדר.","2026-03-09",1,+1,45,{amount:450000000});
+ev("f5","sectorial","budget","מענק לענפי חקלאות מוגדרים","תמיכה בענף מסוים ולא ברוחב המשק.","2026-02-24",2,+1,35,{amount:210000000});
+
+/* --- f6 הרשימה החדשה (אותיות טרם נקבעו) --- */
+ev("f6","economy","platform","מצע ראשוני שפורסם באתר הרשימה","מסמך קצר שהרשימה מגדירה כמצעה.","2026-07-02",1,+1,25);
+ev("f6","economy","statement","הודעה לעיתונות עם הצגת הרשימה","הצהרת כוונות כללית.","2026-07-02",3,+1,15);
+ev(null,"economy","vote","הצבעה בעד תיקון לחוק ההסדרים","הצבעת חבר הכנסת מיוחסת לרשימה לפי תאריך ההצבעה, אחרי המעבר.","2026-01-13",2,-1,20,{person:"p3",stance:"for",cohesion:0.5});
+ev(null,"economy","vote","הצבעה בעד תוספת לתקציב החינוך","תוספת רוחבית למערכת החינוך.","2026-03-05",1,-1,10,{person:"p3",stance:"for",cohesion:0.5});
+ev("f6","security","platform","מצע ראשוני: חתירה להסדר אזורי","סעיף כללי בלי מנגנון.","2026-07-02",1,-1,20);
+ev("f6","security","statement","ריאיון עם ראש הרשימה","מקור בודד.","2026-07-14",3,-1,10);
+ev(null,"security","vote","הצבעה בעד ועדת חקירה ממלכתית","הצבעה שבוצעה אחרי המעבר לרשימה.","2026-02-10",1,-1,15,{person:"p3",stance:"for",cohesion:0.5});
+ev(null,"security","vote","הצבעה נגד הרחבת סמכויות מנהליות","הצבעה שבוצעה אחרי המעבר.","2026-04-22",2,-1,25,{person:"p3",stance:"against",cohesion:0.5});
+ev("f6","sectorial","budget","תמיכה בתקציב רוחבי לתחבורה ציבורית","הקצאה כללית.","2026-03-05",2,+1,20,{amount:150000000});
+ev("f6","sectorial","budget","מענק לרשויות לפי גודל אוכלוסייה","נוסחה כללית בלי העדפת קהל.","2026-05-11",2,+1,25,{amount:90000000});
+
+/* --- f7 תנועת הצפון — פריט מקודד יחיד. יורדת למגש --- */
+ev("f7","economy","vote","הצבעה בעד חוק ההסדרים","פריט מקודד יחיד בכל הפנקס של הסיעה.","2026-01-13",2,+1,20,{stance:"for",cohesion:0.6});
+ev("f7","economy","vote","הצבעה בנושא רפורמת התכנון","הפריט טרם קודד. הוא נספר בכיסוי ואינו נכנס לחישוב.","2026-04-30",1,null,0,{stance:"for"});
+ev("f7","security","statement","הודעה לעיתונות עם הקמת התנועה","טרם קודד.","2026-06-28",3,null,0);
+
+/* --- f8 שורשים — לא פרסמה מצע --- */
+ev("f8","economy","vote","הצבעה בעד העלאת קצבאות זקנה","העלאה רוחבית של הקצבה.","2026-04-07",1,-1,45,{stance:"for",cohesion:0.85});
+ev("f8","economy","budget","דרישה להגדלת תקציב שירותי הרווחה","בקשה לתוספת לרשויות המקומיות.","2026-02-12",1,-1,35,{amount:320000000});
+ev("f8","economy","vote","הצבעה נגד ביטול פיקוח מחירים","התנגדות להסרת הפיקוח.","2026-03-11",2,-1,40,{stance:"against",cohesion:0.78});
+ev("f8","security","vote","הצבעה נגד חוק ההסדרה","התנגדות להכשרה בדיעבד.","2026-02-03",1,-1,60,{stance:"against",cohesion:0.88});
+ev("f8","security","vote","הצבעה בעד יוזמה אזורית","תמיכה במסגרת רב־צדדית.","2025-12-11",2,-1,50,{stance:"for",cohesion:0.8});
+ev("f8","sectorial","budget","תוספת לשירותי רווחה ברשויות מוגדרות","הקצאה לקבוצת רשויות לפי מדד, עם העדפה ניכרת.","2026-02-12",1,+1,55,{amount:320000000});
+ev("f8","sectorial","budget","מענק לארגוני קהילה","הקצאה לגופים בעלי מכנה משותף מוגדר.","2025-12-11",2,+1,45,{amount:70000000});
+
+/* שיוך הצבעות אישיות לסיעה לפי תאריך ההצבעה — סעיף 7.2 */
+let RESOLVED = 0;
+for (const e of EVIDENCE) {
+  if (e.person_id && !e.faction_id) { e.faction_id = factionAt(e.person_id, e.date); RESOLVED++; }
+}
+
+/* ---------------- מיקומי בסיס ---------------- */
+const BASELINES_RAW = [
+  { faction_id:"f1", axis:"economy",  value:+60, rationale:"קו כלכלי עקבי של הפחתת מסים והפרטה בשלוש הקדנציות הקודמות.", sources:["demo://baseline/1"], weight:BASE_W },
+  { faction_id:"f1", axis:"security", value:+45, rationale:"הקו ההיסטורי מתון מזה של הקדנציה הנוכחית: בשתי הקדנציות הקודמות נמנעה הסיעה מהצבעות סיפוח.", sources:["demo://baseline/2"], weight:BASE_W },
+  { faction_id:"f2", axis:"economy",  value:-70, rationale:"מסורת של הרחבת שירותים ציבוריים ומיסוי פרוגרסיבי.", sources:["demo://baseline/3"], weight:BASE_W },
+  { faction_id:"f2", axis:"security", value:-60, rationale:"תמיכה עקבית במסגרות הסדר מדיני.", sources:["demo://baseline/4"], weight:BASE_W },
+  { faction_id:"f3", axis:"economy",  value:-55, rationale:"דפוס היסטורי של הקצאות ייעודיות לקהל מוגדר, בכל קואליציה שבה ישבה.", sources:["demo://baseline/5"], weight:BASE_W },
+  { faction_id:"f3", axis:"religion_state", value:+85, rationale:"קו עקבי של הרחבת מעמד ההלכה בחקיקה.", sources:["demo://baseline/6"], weight:BASE_W },
+  { faction_id:"f5", axis:"economy",  value:+65, rationale:"קו כלכלי מוצהר ועקבי של צמצום ההוצאה, גם בקדנציות שבהן לא הייתה בקואליציה.", sources:["demo://baseline/8"], weight:BASE_W },
+  { faction_id:"f4", axis:"security",  value:+40, rationale:"עמדה ביטחונית ניצית מזו של הקדנציה הנוכחית לאורך שתי קדנציות.", sources:["demo://baseline/9"], weight:BASE_W },
+  { faction_id:"f5", axis:"security", value:+80, rationale:"קו ביטחוני עקבי לאורך שתי קדנציות.", sources:["demo://baseline/7"], weight:BASE_W },
+  /* בסיס בלי נימוק — לא נטען. סעיף 3.4 */
+  { faction_id:"f4", axis:"economy",  value:+20, rationale:"", sources:[], weight:BASE_W }
+];
+const BASELINES = BASELINES_RAW.filter(b => b.rationale && b.rationale.trim() && b.sources.length > 0);
+const BASELINE_REJECTED = BASELINES_RAW.length - BASELINES.length;
+function baselineFor(fid, axis) {
+  return BASELINES.find(b => b.faction_id === fid && b.axis === axis) || null;
+}
+
+/* ================================================================
+   מנוע החישוב — סעיפים 3.3, 3.4, 3.5
+   ================================================================ */
+const state = {
+  screen: "map",
+  axisX: "economy",
+  axisY: "security",
+  mode: "both",
+  tier1Only: false,
+  baseline: false,
+  selected: null,
+  prefs: { security:{pos:0,w:3}, economy:{pos:0,w:3}, religion_state:{pos:0,w:2}, governance:{pos:0,w:2} }
+};
+
+function activeEvidence() {
+  return state.tier1Only ? EVIDENCE.filter(e => e.source_tier === 1) : EVIDENCE;
+}
+function pullOf(e) { return e.direction * e.magnitude * TIER_MULT[e.source_tier]; }
+
+function itemsFor(fid, bucket, axis) {
+  return activeEvidence().filter(e => e.faction_id === fid && e.bucket === bucket && e.axis === axis);
+}
+/* פריט משפיע על מיקום רק אם קודד וגם יש לו מקור */
+function counting(items) {
+  return items.filter(e => e.direction !== null && e.source_url);
+}
+function rawPosition(fid, bucket, axis) {
+  const c = counting(itemsFor(fid, bucket, axis));
+  if (c.length < 2) return null;                       // מינימום שני פריטים מקודדים
+  let num = 0, den = 0;
+  for (const e of c) { num += pullOf(e) * e.magnitude; den += e.magnitude; }
+  if (den === 0) return null;
+  return num / den;                                    // חסום בטווח מינוס מאה עד מאה
+}
+function positionOf(fid, bucket, axis) {
+  const p = rawPosition(fid, bucket, axis);
+  if (p === null) return null;
+  if (state.baseline && bucket === "actual") {
+    const b = baselineFor(fid, axis);
+    if (b) return p * (1 - b.weight) + b.value * b.weight;
+  }
+  return p;
+}
+function sectorialOf(fid) { return rawPosition(fid, "actual", "sectorial"); }
+
+/* סיבת היעדר נקודה — היעדר הוא נתון, לא תקלה */
+function absenceReason(fid, bucket, axis) {
+  if (bucket === "declared" && F[fid].no_platform) return "לא פרסמה מצע";
+  const all = itemsFor(fid, bucket, axis);
+  const c = counting(all);
+  if (all.length === 0) return "אין פריטים בציר";
+  if (c.length === 0) return "הפריטים טרם קודדו";
+  if (c.length < 2) return "פריט מקודד אחד בלבד";
+  return "אין מספיק ראיות";
+}
+
+function coverage() {
+  const ev = activeEvidence();
+  const cells = [];
+  for (const f of FACTIONS) for (const b of ["declared","actual"]) for (const a of AXIS_KEYS)
+    cells.push(rawPosition(f.faction_id, b, a) !== null);
+  const placed = FACTIONS.filter(f =>
+    AXIS_KEYS.some(a => rawPosition(f.faction_id,"declared",a) !== null || rawPosition(f.faction_id,"actual",a) !== null)).length;
+  return {
+    items: ev.length,
+    tier1: ev.filter(e => e.source_tier === 1).length,
+    placed, total: FACTIONS.length,
+    pct: Math.round(100 * cells.filter(Boolean).length / cells.length)
+  };
+}
+
+/* ================================================================
+   כלי עזר לתצוגה
+   ================================================================ */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text) {
+  const n = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) if (attrs[k] !== null && attrs[k] !== undefined) n.setAttribute(k, attrs[k]);
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+function h(tag, attrs, kids) {
+  const n = document.createElement(tag);
+  for (const k in (attrs||{})) {
+    if (k === "class") n.className = attrs[k];
+    else if (k === "html") n.innerHTML = attrs[k];
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), attrs[k]);
+    else if (attrs[k] === true) n.setAttribute(k, "");
+    else if (attrs[k] !== false && attrs[k] !== null && attrs[k] !== undefined) n.setAttribute(k, attrs[k]);
+  }
+  for (const c of [].concat(kids || [])) if (c !== null && c !== undefined && c !== false)
+    n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  return n;
+}
+/* כל נתון מספרי עובר דרך העטיפה הזאת. סעיף 6. */
+function num(v, digits) { return h("span", { class:"ltr" }, fmt(v, digits)); }
+function fmt(v, digits) {
+  if (v === null || v === undefined) return "—";
+  const d = digits === undefined ? 0 : digits;
+  const s = Math.abs(v).toFixed(d);
+  return (v < 0 ? "−" : "") + s;
+}
+function fmtDate(iso) { const p = iso.split("-"); return p[2] + "." + p[1] + "." + p[0]; }
+function fmtNis(v) {
+  const a = Math.abs(v);
+  if (a >= 1e9) return (v/1e9).toFixed(1) + " מיליארד ש״ח";
+  if (a >= 1e6) return Math.round(v/1e6) + " מיליון ש״ח";
+  return v.toLocaleString("en-US") + " ש״ח";
+}
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+/* ================================================================
+   המפה
+   ================================================================ */
+const VB = { w:1200, h:1080, cx:600, cy:500, half:430 };
+const NOTE = { w:104, h:60 };
+function sx(v) { return VB.cx + (v/100) * VB.half; }
+function sy(v) { return VB.cy - (v/100) * VB.half; }
+
+function mapRows() {
+  return FACTIONS.map(f => {
+    const d = { x: positionOf(f.faction_id,"declared",state.axisX), y: positionOf(f.faction_id,"declared",state.axisY) };
+    const a = { x: positionOf(f.faction_id,"actual",  state.axisX), y: positionOf(f.faction_id,"actual",  state.axisY) };
+    return { f, declared: (d.x !== null && d.y !== null) ? d : null, actual: (a.x !== null && a.y !== null) ? a : null };
+  });
+}
+
+function drawSlip(g, row, kind) {
+  const f = row.f;
+  g.appendChild(el("rect", { class:"slip-body", x:-NOTE.w/2, y:-NOTE.h/2, width:NOTE.w, height:NOTE.h, rx:2 }));
+  if (f.letters) {
+    g.appendChild(el("text", { class:"slip-letters", x:0, y:2, "text-anchor":"middle",
+      "dominant-baseline":"middle", "font-size":27 }, f.letters));
+  } else {
+    g.appendChild(el("rect", { x:-27, y:-22, width:54, height:27, rx:2, fill:"none",
+      stroke: kind === "declared" ? "var(--gapline)" : "#14181d", "stroke-width":1.4,
+      "stroke-dasharray":"4 3", "stroke-opacity":.6 }));
+  }
+  g.appendChild(el("text", { class:"slip-name", x:0, y:NOTE.h/2 - 8, "text-anchor":"middle", "font-size":13.5 }, f.name));
+}
+
+function renderMap() {
+  const svg = $("#map");
+  svg.setAttribute("viewBox", "0 0 " + VB.w + " " + VB.h);
+  svg.textContent = "";
+  const AX = AXES[state.axisX], AY = AXES[state.axisY];
+
+  /* רבעים */
+  const q = el("g", {});
+  q.appendChild(el("rect", { class:"quad", x:sx(0), y:sy(100), width:VB.half, height:VB.half }));
+  q.appendChild(el("rect", { class:"quad", x:sx(-100), y:sy(0), width:VB.half, height:VB.half }));
+  svg.appendChild(q);
+
+  /* מסגרת, צירים, שנתות */
+  svg.appendChild(el("rect", { x:sx(-100), y:sy(100), width:VB.half*2, height:VB.half*2,
+    fill:"none", stroke:"var(--rule)", "stroke-width":1.5 }));
+  svg.appendChild(el("line", { class:"axis-line", x1:sx(-100), y1:sy(0), x2:sx(100), y2:sy(0) }));
+  svg.appendChild(el("line", { class:"axis-line", x1:sx(0), y1:sy(-100), x2:sx(0), y2:sy(100) }));
+  for (const t of [-50, 50]) {
+    svg.appendChild(el("line", { class:"axis-tick", x1:sx(t), y1:sy(-100), x2:sx(t), y2:sy(100), "stroke-dasharray":"3 6" }));
+    svg.appendChild(el("line", { class:"axis-tick", x1:sx(-100), y1:sy(t), x2:sx(100), y2:sy(t), "stroke-dasharray":"3 6" }));
+  }
+
+  /* קטבים — text-anchor middle בלבד, סעיף 6 */
+  svg.appendChild(el("text", { class:"pole", x:VB.cx, y:sy(100)-24, "text-anchor":"middle" }, AY.pos));
+  svg.appendChild(el("text", { class:"pole", x:VB.cx, y:sy(-100)+38, "text-anchor":"middle" }, AY.neg));
+  svg.appendChild(el("text", { class:"pole", x:sx(100)+95, y:VB.cy+5, "text-anchor":"middle" }, AX.pos));
+  svg.appendChild(el("text", { class:"pole", x:sx(-100)-95, y:VB.cy+5, "text-anchor":"middle" }, AX.neg));
+  for (const t of [-50, 50]) {
+    svg.appendChild(el("text", { class:"tickno ltr", x:sx(t), y:sy(-100)+18, "text-anchor":"middle" }, fmt(t)));
+    svg.appendChild(el("text", { class:"tickno ltr", x:sx(-100)-22, y:sy(t)+4, "text-anchor":"middle" }, fmt(t)));
+  }
+
+  const rows = mapRows();
+  const showD = state.mode === "both" || state.mode === "declared";
+  const showA = state.mode === "both" || state.mode === "actual";
+
+  /* קווי הפער */
+  const gapLayer = el("g", {});
+  svg.appendChild(gapLayer);
+
+  for (const row of rows) {
+    if (state.mode === "both" && row.declared && row.actual) {
+      const x1 = sx(row.declared.x), y1 = sy(row.declared.y);
+      const x2 = sx(row.actual.x),  y2 = sy(row.actual.y);
+      const dx = x2-x1, dy = y2-y1, len = Math.hypot(dx,dy);
+      if (len > 4) {
+        const ux = dx/len, uy = dy/len;
+        const trim1 = Math.min(len*0.34, 46), trim2 = Math.min(len*0.34, 52);
+        const ax1 = x1+ux*trim1, ay1 = y1+uy*trim1;
+        const ax2 = x2-ux*trim2, ay2 = y2-uy*trim2;
+        /* גודל הפער בשני הצירים, מנורמל */
+        const gap = Math.hypot(row.actual.x-row.declared.x, row.actual.y-row.declared.y) / 2.83;
+        const wgt = 1.4 + (gap/100) * 6.6;
+        const op  = 0.30 + (gap/100) * 0.62;
+        const sel = state.selected === row.f.faction_id;
+        const g = el("g", { class: "gaparrow" + (sel ? " sel" : "") });
+        g.appendChild(el("line", { class:"gapline" + (sel ? " sel" : ""), x1:ax1, y1:ay1, x2:ax2, y2:ay2,
+          "stroke-width":wgt.toFixed(2), "stroke-opacity":op.toFixed(2), "stroke-linecap":"round" }));
+        const hl = 13 + wgt, hw = 6 + wgt*0.7;
+        const px = -uy, py = ux;
+        g.appendChild(el("polygon", {
+          points: [ [ax2+ux*hl, ay2+uy*hl], [ax2+px*hw, ay2+py*hw], [ax2-px*hw, ay2-py*hw] ]
+            .map(p => p[0].toFixed(1)+","+p[1].toFixed(1)).join(" "),
+          fill: sel ? "var(--accent)" : "var(--gapline)", "fill-opacity":op.toFixed(2) }));
+        gapLayer.appendChild(g);
+      }
+    }
+  }
+
+  /* פתקים */
+  const animate = !reduceMotion.matches && (state.mode === "both" || state.mode === "actual");
+  let i = 0;
+  for (const row of rows) {
+    const sel = state.selected === row.f.faction_id;
+
+    if (showD && row.declared) {
+      const g = el("g", { class:"note-g declared no-anim" + (sel ? " sel" : ""), tabindex:"0",
+        role:"button", "aria-label": row.f.name + ", מוצהר" });
+      g.setAttribute("transform", "translate(" + sx(row.declared.x).toFixed(1) + "," + sy(row.declared.y).toFixed(1) + ")");
+      drawSlip(g, row, "declared");
+      g.addEventListener("click", () => select(row.f.faction_id));
+      g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(row.f.faction_id); } });
+      svg.appendChild(g);
+    }
+
+    if (showA && row.actual) {
+      const start = (animate && row.declared) ? row.declared : row.actual;
+      const g = el("g", { class:"note-g actual no-anim" + (sel ? " sel" : ""), tabindex:"0",
+        role:"button", "aria-label": row.f.name + ", בפועל" });
+      g.setAttribute("transform", "translate(" + sx(start.x).toFixed(1) + "," + sy(start.y).toFixed(1) + ")");
+      drawSlip(g, row, "actual");
+      g.addEventListener("click", () => select(row.f.faction_id));
+      g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(row.f.faction_id); } });
+      svg.appendChild(g);
+
+      if (animate && row.declared) {
+        const delay = 140 + (i++) * 130;
+        setTimeout(() => {
+          g.classList.remove("no-anim");
+          g.setAttribute("transform", "translate(" + sx(row.actual.x).toFixed(1) + "," + sy(row.actual.y).toFixed(1) + ")");
+        }, delay);
+      }
+    }
+  }
+  renderTray(rows);
+}
+
+function renderTray(rows) {
+  const missing = rows.filter(r => !r.declared && !r.actual);
+  const t = $("#tray");
+  t.textContent = "";
+  const AX = AXES[state.axisX], AY = AXES[state.axisY];
+  t.appendChild(h("h3", {}, "מגש הטרם־מקוטלגות"));
+  t.appendChild(h("p", {}, "סיעות שאין להן מספיק ראיות מקודדות בצמד הצירים הזה. היעדר נקודה הוא נתון, לא תקלה."));
+  if (!missing.length) {
+    t.appendChild(h("p", { style:"margin-top:8px" }, "בצמד הצירים הזה כל הסיעות ממוקמות."));
+    return;
+  }
+  const ul = h("ul", {});
+  for (const r of missing) {
+    const why = [];
+    for (const [ax, meta] of [[state.axisX, AX], [state.axisY, AY]]) {
+      const dr = rawPosition(r.f.faction_id,"declared",ax), ar = rawPosition(r.f.faction_id,"actual",ax);
+      if (dr === null && ar === null) why.push(meta.name + ": " + absenceReason(r.f.faction_id,"actual",ax));
+    }
+    ul.appendChild(h("li", {}, [r.f.name, " ", h("em", {}, why.join(" · "))]));
+  }
+  t.appendChild(ul);
+}
+
+function select(fid) { state.selected = state.selected === fid ? null : fid; renderMap(); renderDrawer(); }
+
+/* ================================================================
+   מגירת הראיות — סעיף 5.3
+   ================================================================ */
+function tierPips(tier) {
+  const w = h("span", { class:"tier", title:"דרגת מקור" });
+  for (let i = 1; i <= 3; i++) w.appendChild(h("span", { class:"pip" + (i <= (4 - tier) ? " on" : "") }));
+  w.appendChild(h("span", { class:"ltr" }, "T" + tier));
+  return w;
+}
+function evidenceCard(e) {
+  const uncoded = e.direction === null;
+  const raw = h("div", { class:"raw" }, [
+    h("div", { class:"meta" }, [
+      h("span", { class:"chip bucket-" + e.bucket }, e.bucket === "declared" ? "מוצהר" : "בפועל"),
+      h("span", { class:"chip" }, TYPE_HE[e.type]),
+      h("span", { class:"chip" }, AXES[e.axis] ? AXES[e.axis].name : "סקטוריאליות"),
+      e.contested_topic && h("span", { class:"chip", style:"border-color:var(--warn);color:var(--warn)" }, "נושא על תפר")
+    ]),
+    h("h4", {}, e.title),
+    h("div", { class:"sum" }, e.summary),
+    h("div", { class:"src" }, [
+      h("span", { class:"ltr" }, fmtDate(e.date)),
+      tierPips(e.source_tier),
+      e.source_url
+        ? h("span", { class:"srcref ltr", title:"מקור לדוגמה. אין כאן קישור אמיתי." }, e.source_url)
+        : h("span", { class:"nosrc" }, "אין מקור. נספר בכיסוי, לא משפיע על המיקום"),
+      e.amount_nis != null && h("span", { class:"ltr" }, fmtNis(e.amount_nis)),
+      e.cohesion != null && h("span", {}, ["לכידות ", h("span", { class:"ltr" }, e.cohesion.toFixed(2))]),
+      e.person_id && h("span", {}, "יוחס לסיעה לפי תאריך ההצבעה")
+    ])
+  ]);
+  const coding = h("div", { class:"coding" }, uncoded
+    ? [h("span", { class:"lbl" }, "קידוד"), h("span", {}, "טרם קודד")]
+    : [
+        h("span", { class:"lbl" }, "קידוד"),
+        h("span", {}, ["כיוון ", h("b", { class:"ltr" }, e.direction > 0 ? "+1" : "−1")]),
+        h("span", {}, ["עוצמה ", h("b", { class:"ltr" }, String(e.magnitude))]),
+        h("span", {}, ["משיכה ", h("b", { class:"ltr" }, fmt(pullOf(e), 1))]),
+        h("span", {}, e.coded_by)
+      ]);
+  return h("article", { class:"ev" + (uncoded ? " uncoded" : "") }, [raw, coding]);
+}
+
+function posCell(fid, bucket, axis) {
+  const p = positionOf(fid, bucket, axis);
+  if (p === null) return h("span", { class:"none" }, absenceReason(fid, bucket, axis));
+  return h("span", { class:"num ltr" }, fmt(p, 1));
+}
+
+function renderDrawer() {
+  const d = $("#drawer");
+  d.textContent = "";
+  if (!state.selected) {
+    d.appendChild(h("div", { class:"empty" }, "בחר פתק כדי לראות את הראיות שהפיקו את מיקומו."));
+    return;
+  }
+  const fid = state.selected, f = F[fid];
+  const items = activeEvidence().filter(e => e.faction_id === fid);
+  const tier1 = items.filter(e => e.source_tier === 1).length;
+  const codedN = items.filter(e => e.direction !== null).length;
+
+  d.appendChild(h("div", { class:"dhead" }, [
+    h("div", { class:"grow" }, [
+      h("span", { class:"eyebrow" }, f.letters ? "רשימה " + f.letters : "אותיות טרם נקבעו"),
+      h("h2", {}, f.name),
+      f.no_platform && h("div", { style:"font-size:12.5px;color:var(--warn);font-weight:700;margin-top:2px" }, "לא פרסמה מצע")
+    ]),
+    h("button", { class:"dclose", "aria-label":"סגור", onclick:() => select(fid) }, "×")
+  ]));
+
+  const grid = h("div", { class:"posgrid" }, [
+    h("span", {}), h("span", { class:"hd" }, "מוצהר"), h("span", { class:"hd" }, "בפועל"),
+    h("span", { class:"hd" }, AXES[state.axisX].name), posCell(fid,"declared",state.axisX), posCell(fid,"actual",state.axisX),
+    h("span", { class:"hd" }, AXES[state.axisY].name), posCell(fid,"declared",state.axisY), posCell(fid,"actual",state.axisY)
+  ]);
+  d.appendChild(grid);
+
+  const sect = sectorialOf(fid);
+  d.appendChild(h("div", { class:"counters" }, [
+    h("span", {}, [h("b", { class:"ltr" }, String(items.length)), " פריטים"]),
+    h("span", {}, [h("b", { class:"ltr" }, String(tier1)), " בדרגה 1"]),
+    h("span", {}, [h("b", { class:"ltr" }, String(codedN)), " מקודדים"]),
+    sect !== null && h("span", {}, ["סקטוריאליות ", h("b", { class:"ltr" }, fmt(sect, 0))])
+  ]));
+
+  if (state.baseline) {
+    const bs = [state.axisX, state.axisY].map(a => baselineFor(fid, a)).filter(Boolean);
+    if (bs.length) {
+      d.appendChild(h("div", { class:"counters", style:"display:block" }, [
+        h("div", { class:"lbl eyebrow" }, "מיקום בסיס"),
+        ...bs.map(b => h("div", { style:"margin-top:4px" }, [
+          AXES[b.axis].name + ": ", h("b", { class:"ltr" }, fmt(b.value, 0)),
+          " במשקל ", h("b", { class:"ltr" }, b.weight.toFixed(2)), ". ", b.rationale
+        ]))
+      ]));
+    }
+  }
+
+  const order = { declared:0, actual:1 };
+  const sorted = items.slice().sort((a,b) =>
+    (order[a.bucket] - order[b.bucket]) ||
+    (a.axis === b.axis ? 0 : (a.axis < b.axis ? -1 : 1)) ||
+    (a.date === b.date ? 0 : (a.date < b.date ? 1 : -1)));
+  for (const e of sorted) d.appendChild(evidenceCard(e));
+}
+
+/* ================================================================
+   סקטוריאליות
+   ================================================================ */
+const SEQ = ["var(--seq-1)","var(--seq-2)","var(--seq-3)","var(--seq-4)","var(--seq-5)","var(--seq-6)","var(--seq-7)"];
+function renderSector() {
+  const box = $("#sector-bars");
+  box.textContent = "";
+  const rows = FACTIONS.map(f => ({ f, v: sectorialOf(f.faction_id) }));
+  const have = rows.filter(r => r.v !== null).sort((a,b) => b.v - a.v);
+  const none = rows.filter(r => r.v === null);
+  for (const r of have) {
+    const step = SEQ[Math.min(SEQ.length-1, Math.max(0, Math.round((r.v/100) * (SEQ.length-1))))];
+    box.appendChild(h("div", { class:"barrow" }, [
+      h("div", { class:"nm" }, [r.f.name, " ", h("em", {}, r.f.letters ? r.f.letters : "אותיות טרם נקבעו")]),
+      h("div", { class:"track" }, [h("div", { class:"fill", style:"width:" + r.v.toFixed(1) + "%;background:" + step })]),
+      h("div", { class:"val ltr" }, fmt(r.v, 0))
+    ]));
+  }
+  for (const r of none) {
+    box.appendChild(h("div", { class:"barrow" }, [
+      h("div", { class:"nm" }, r.f.name),
+      h("div", { style:"font-size:12.5px;color:var(--ink-3)" }, "אין מספיק ראיות מקודדות בציר הזה"),
+      h("div", { class:"val" }, "—")
+    ]));
+  }
+}
+
+/* ================================================================
+   מנוע המשקולות — סעיף 5.5
+   ================================================================ */
+function renderWeightControls() {
+  const g = $("#wgrid");
+  g.textContent = "";
+  for (const k of AXIS_KEYS) {
+    const A = AXES[k], p = state.prefs[k];
+    const posOut = h("b", { class:"ltr" }, fmt(p.pos, 0));
+    const wOut = h("b", { class:"ltr" }, String(p.w));
+    g.appendChild(h("div", { class:"wax" }, [
+      h("h3", {}, A.name),
+      h("label", {}, ["העמדה שלי: ", posOut]),
+      h("input", { type:"range", min:-100, max:100, step:5, value:String(p.pos),
+        oninput: e => { p.pos = +e.target.value; posOut.textContent = fmt(p.pos, 0); renderDistances(); } }),
+      h("div", { class:"poles" }, [h("span", {}, A.neg), h("span", {}, A.pos)]),
+      h("label", {}, ["כמה חשוב לי הציר: ", wOut]),
+      h("input", { type:"range", min:0, max:5, step:1, value:String(p.w),
+        oninput: e => { p.w = +e.target.value; wOut.textContent = String(p.w); renderDistances(); } })
+    ]));
+  }
+}
+function distanceFor(fid) {
+  let num = 0, den = 0; const used = [], missing = [];
+  for (const k of AXIS_KEYS) {
+    const p = state.prefs[k];
+    if (p.w === 0) continue;
+    const v = positionOf(fid, "actual", k);
+    if (v === null) { missing.push(AXES[k].name); continue; }
+    num += p.w * Math.pow(p.pos - v, 2); den += p.w; used.push(k);
+  }
+  if (!den) return { d:null, used, missing };
+  return { d: Math.sqrt(num/den), used, missing };
+}
+function renderDistances() {
+  const box = $("#dist");
+  box.textContent = "";
+  /* סדר קבוע לפי שם. אין מיון לפי התוצאה. */
+  const rows = FACTIONS.slice().sort((a,b) => a.name.localeCompare(b.name, "he"));
+  for (const f of rows) {
+    const r = distanceFor(f.faction_id);
+    const kids = [h("button", { class:"nm", onclick: () => { state.selected = f.faction_id; go("map"); renderMap(); renderDrawer(); } }, f.name)];
+    if (r.d === null) {
+      kids.push(h("div", { class:"nodata" }, "אין מיקום בפועל בצירים שסימנת כחשובים"));
+    } else {
+      const pct = Math.min(100, (r.d/200)*100);
+      kids.push(h("div", { class:"track" }, [h("div", { class:"fill", style:"width:" + pct.toFixed(1) + "%;background:var(--accent)" })]));
+      kids.push(h("div", { class:"val ltr" }, fmt(r.d, 0)));
+      if (r.missing.length) kids.push(h("div", { class:"nodata", style:"grid-column:2/-1" }, "לא נכללו בחישוב: " + r.missing.join(", ")));
+    }
+    box.appendChild(h("div", { class:"drow" }, kids));
+  }
+}
+
+/* ================================================================
+   מתודולוגיה
+   ================================================================ */
+function renderMethod() {
+  const at = $("#axis-table");
+  at.innerHTML = "<thead><tr><th>ציר</th><th>קוטב חיובי</th><th>קוטב שלילי</th></tr></thead>";
+  const tb = h("tbody", {});
+  for (const k of AXIS_KEYS) tb.appendChild(h("tr", {}, [h("td", {}, AXES[k].name), h("td", {}, AXES[k].pos), h("td", {}, AXES[k].neg)]));
+  tb.appendChild(h("tr", {}, [h("td", {}, "סקטוריאליות"), h("td", { colspan:"2" }, "סולם מאפס עד מאה. מסך נפרד, ואינו מקודד לגודל הסמן או לצבעו במפה הראשית.")]));
+  at.appendChild(tb);
+
+  const tt = $("#tier-table");
+  tt.innerHTML = "<thead><tr><th>דרגה</th><th>מקור</th><th>מכפיל</th></tr></thead>";
+  const tb2 = h("tbody", {});
+  const desc = { 1:"אתר הכנסת, ספר התקציב, פרוטוקולים רשמיים, הסכמים קואליציוניים", 2:"הצלבה של שני כלי תקשורת ומעלה, עם הסבר", 3:"מקור בודד, פרשנות, ציטוט לא מתומלל" };
+  for (const t of [1,2,3]) tb2.appendChild(h("tr", {}, [
+    h("td", {}, [tierPips(t)]), h("td", {}, desc[t]), h("td", {}, [h("span", { class:"ltr" }, TIER_MULT[t].toFixed(2))])
+  ]));
+  tt.appendChild(tb2);
+
+  $("#coder-line").textContent = CODER_NOTE + " נדחו " + BASELINE_REJECTED +
+    " מיקומי בסיס מפני שלא נכתב להם נימוק או שלא צורף מקור. " + RESOLVED +
+    " הצבעות אישיות יוחסו לסיעה לפי תאריך ההצבעה ולא לפי השיוך הנוכחי.";
+}
+
+/* ================================================================
+   חיווט
+   ================================================================ */
+function renderCoverage() {
+  const c = coverage();
+  $("#m-items").textContent  = c.items;
+  $("#m-tier1").textContent  = c.tier1;
+  $("#m-placed").innerHTML   = "";
+  $("#m-placed").append(document.createTextNode(String(c.placed)), h("small", {}, " מתוך " + c.total));
+  $("#m-cov").innerHTML      = "";
+  $("#m-cov").append(document.createTextNode(String(c.pct)), h("small", {}, "%"));
+}
+function renderAll() { renderCoverage(); renderMap(); renderDrawer(); renderSector(); renderDistances(); }
+
+function go(screen) {
+  state.screen = screen;
+  for (const t of $$(".tab[data-screen]")) t.setAttribute("aria-selected", String(t.dataset.screen === screen));
+  for (const s of ["map","sector","weights","method"]) $("#screen-" + s).hidden = (s !== screen);
+  if (screen === "map") renderMap();
+}
+
+function initAxisSelects() {
+  for (const [id, key] of [["#axis-x","axisX"], ["#axis-y","axisY"]]) {
+    const sel = $(id);
+    sel.textContent = "";
+    for (const k of AXIS_KEYS) sel.appendChild(h("option", { value:k, selected: state[key] === k }, AXES[k].name + (key === "axisX" ? " (אופקי)" : " (אנכי)")));
+    sel.addEventListener("change", () => {
+      if (sel.value === state[key === "axisX" ? "axisY" : "axisX"]) {
+        /* החלפה: אין להציג את אותו ציר פעמיים */
+        const other = key === "axisX" ? "axisY" : "axisX";
+        state[other] = state[key];
+        $(other === "axisX" ? "#axis-x" : "#axis-y").value = state[other];
+      }
+      state[key] = sel.value;
+      renderMap(); renderDrawer();
+    });
+  }
+}
+
+let booted = false;
+document.addEventListener("DOMContentLoaded", boot);
+if (document.readyState !== "loading") boot();
+function boot() {
+  if (booted) return; booted = true;
+  initAxisSelects();
+  renderWeightControls();
+  renderMethod();
+  for (const t of $$(".tab[data-screen]")) t.addEventListener("click", () => go(t.dataset.screen));
+  for (const b of $$("#seg-mode button")) b.addEventListener("click", () => {
+    state.mode = b.dataset.mode;
+    for (const x of $$("#seg-mode button")) x.setAttribute("aria-pressed", String(x === b));
+    renderMap();
+  });
+  $("#sw-tier1").addEventListener("change", e => {
+    state.tier1Only = e.target.checked;
+    $("#sw-tier1-wrap").dataset.on = String(state.tier1Only);
+    renderAll();
+  });
+  $("#sw-base").addEventListener("change", e => {
+    state.baseline = e.target.checked;
+    $("#sw-base-wrap").dataset.on = String(state.baseline);
+    $("#legend-base").hidden = !state.baseline;
+    renderAll();
+  });
+  $("#btn-replay").addEventListener("click", () => renderMap());
+  for (const t of $$(".tab[data-screen]")) t.setAttribute("aria-selected", String(t.dataset.screen === "map"));
+  for (const s of ["map","sector","weights","method"]) $("#screen-" + s).hidden = (s !== "map");
+  renderAll();
+}
+</script>
