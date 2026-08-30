@@ -2,7 +2,7 @@
    עיקרון: לא מניחים שמות שדות. מגלים אותם מ-$metadata ומדווחים על כל אי-התאמה.
    סעיף 7.1 באפיון דורש לאמת את קידוד VoteValue מול $metadata לפני פרודקשן. */
 
-import { mkdir, readFile, writeFile, appendFile, stat } from "node:fs/promises";
+import { mkdir, readFile, stat, rm, rename } from "node:fs/promises";
 import { createWriteStream } from "node:fs";
 import path from "node:path";
 
@@ -120,6 +120,8 @@ export async function pageAll(url, { onPage, limit = Infinity } = {}) {
 export async function cached(cacheDir, name, producer, { force = false } = {}) {
   await mkdir(cacheDir, { recursive: true });
   const file = path.join(cacheDir, `${name}.jsonl`);
+  const part = file + ".part";
+  await rm(part, { force: true });          /* שארית מהרצה שנקטעה */
   if (!force) {
     try {
       const s = await stat(file);
@@ -129,12 +131,21 @@ export async function cached(cacheDir, name, producer, { force = false } = {}) {
       }
     } catch { /* לא במטמון */ }
   }
-  const out = createWriteStream(file, { flags: "w" });
+  /* כותבים לקובץ זמני ומקדמים אותו רק בסיום מוצלח, כדי שקטיעה באמצע
+     לא תשאיר מטמון חלקי שההרצה הבאה תתייחס אליו כמלא. */
+  const out = createWriteStream(part, { flags: "w" });
   const rows = [];
-  await producer(async batch => {
-    for (const r of batch) { rows.push(r); out.write(JSON.stringify(r) + "\n"); }
-  });
-  await new Promise(res => out.end(res));
+  try {
+    await producer(async batch => {
+      for (const r of batch) { rows.push(r); out.write(JSON.stringify(r) + "\n"); }
+    });
+    await new Promise(res => out.end(res));
+  } catch (err) {
+    await new Promise(res => out.end(res));
+    await rm(part, { force: true });
+    throw err;
+  }
+  await rename(part, file);
   return { file, rows, fromCache: false };
 }
 
