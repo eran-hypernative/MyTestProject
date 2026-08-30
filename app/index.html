@@ -271,7 +271,9 @@ table { border-collapse: collapse; width: 100%; font-size: 13px; }
 th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--rule); }
 th { font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); }
 .tblwrap { overflow-x: auto; }
-code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; background: var(--panel-2); padding: 1px 5px; border-radius: 2px; }
+code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px;
+  background: var(--panel-2); padding: 1px 5px; border-radius: 2px;
+  direction: ltr; unicode-bidi: isolate; }
 .formula { display: block; white-space: pre; overflow-x: auto; padding: 10px 12px; background: var(--panel-2); border: 1px solid var(--rule); border-radius: var(--r); margin: 8px 0; direction: ltr; text-align: left; }
 
 /* ---------- סקטוריאליות ---------- */
@@ -680,10 +682,40 @@ const BASELINES_RAW = [
   /* בסיס בלי נימוק — לא נטען. סעיף 3.4 */
   { faction_id:"f4", axis:"economy",  value:+20, rationale:"", sources:[], weight:BASE_W }
 ];
-const BASELINES = BASELINES_RAW.filter(b => b.rationale && b.rationale.trim() && b.sources.length > 0);
+const BASELINES = BASELINES_RAW.slice().filter(b => b.rationale && b.rationale.trim() && b.sources.length > 0);
 const BASELINE_REJECTED = BASELINES_RAW.length - BASELINES.length;
 function baselineFor(fid, axis) {
   return BASELINES.find(b => b.faction_id === fid && b.axis === axis) || null;
+}
+
+/* ================================================================
+   בחירת מקור הנתונים
+   ברירת המחדל היא נתוני אמת. נתוני ההדגמה דורשים ?demo=1 מפורש.
+   ================================================================ */
+/* ==== DATASET:BEGIN — build.mjs מזריק כאן את הפלט של הרבסטר ==== */
+const REAL_DATASET = null;
+/* ==== DATASET:END ==== */
+
+const DEMO_REQUESTED = /(^|[?&])demo=1(&|$)/.test(location.search);
+const DATA_MODE = REAL_DATASET ? "real" : (DEMO_REQUESTED ? "demo" : "empty");
+
+function applyDataset() {
+  if (DATA_MODE === "demo") return;                 /* משאירים את פנקס ההדגמה */
+  for (const arr of [FACTIONS, PERSONS, MEMBERSHIPS, EVIDENCE, BASELINES]) arr.length = 0;
+  RESOLVED = 0;
+  if (DATA_MODE === "real") {
+    FACTIONS.push(...(REAL_DATASET.factions || []));
+    PERSONS.push(...(REAL_DATASET.persons || []));
+    MEMBERSHIPS.push(...(REAL_DATASET.memberships || []));
+    EVIDENCE.push(...(REAL_DATASET.evidence || []));
+    BASELINES.push(...((REAL_DATASET.baselines || []).filter(b => b.rationale && b.rationale.trim() && (b.sources || []).length)));
+    for (const e of EVIDENCE) {
+      if (!e.bucket) e.bucket = BUCKET_OF[e.type];
+      if (e.person_id && !e.faction_id) { e.faction_id = factionAt(e.person_id, e.date); RESOLVED++; }
+    }
+  }
+  for (const k of Object.keys(F)) delete F[k];
+  for (const f of FACTIONS) F[f.faction_id] = f;
 }
 
 /* ================================================================
@@ -753,7 +785,7 @@ function coverage() {
     items: ev.length,
     tier1: ev.filter(e => e.source_tier === 1).length,
     placed, total: FACTIONS.length,
-    pct: Math.round(100 * cells.filter(Boolean).length / cells.length)
+    pct: cells.length ? Math.round(100 * cells.filter(Boolean).length / cells.length) : 0
   };
 }
 
@@ -943,6 +975,10 @@ function renderTray(rows) {
   const AX = AXES[state.axisX], AY = AXES[state.axisY];
   t.appendChild(h("h3", {}, "מגש הטרם־מקוטלגות"));
   t.appendChild(h("p", {}, "סיעות שאין להן מספיק ראיות מקודדות בצמד הצירים הזה. היעדר נקודה הוא נתון, לא תקלה."));
+  if (!FACTIONS.length) {
+    t.appendChild(h("p", { style:"margin-top:8px" }, "לא נטענו סיעות. הפנקס ריק."));
+    return;
+  }
   if (!missing.length) {
     t.appendChild(h("p", { style:"margin-top:8px" }, "בצמד הצירים הזה כל הסיעות ממוקמות."));
     return;
@@ -1176,6 +1212,42 @@ function renderMethod() {
 /* ================================================================
    חיווט
    ================================================================ */
+function renderBanner() {
+  const w = document.querySelector(".demo-banner .wrap");
+  w.textContent = "";
+  if (DATA_MODE === "real") {
+    w.append(h("strong", {}, "נתוני אמת"),
+      h("span", {}, "מקור: " + REAL_DATASET.source + " · כנסת " + REAL_DATASET.knesset +
+        " · נבנה " + String(REAL_DATASET.generated_at).slice(0,10) +
+        (REAL_DATASET.vote_value_map_verified ? "" : " · קידוד VoteValue טרם אומת")));
+    return;
+  }
+  if (DATA_MODE === "demo") {
+    w.append(h("strong", {}, "נתוני הדגמה"),
+      h("span", {}, "כל הסיעות והפריטים במסך הזה בדויים. אין כאן נתון על אף מפלגה אמיתית. הקידוד הוא עבודת עורך אנושי, ועדיין לא נעשה."));
+    return;
+  }
+  w.append(h("strong", {}, "אין נתונים"),
+    h("span", {}, "לא נטען פנקס. יש להריץ את הרבסטר ואת העיבוד, ואז לקדד. עד אז המפה ריקה, וזו התצוגה הנכונה."));
+  const notice = h("div", { class:"sheet", style:"margin:12px 0" }, [
+    h("span", { class:"eyebrow" }, "מצב נוכחי"),
+    h("h2", {}, "הפנקס ריק"),
+    h("p", { style:"margin-top:6px;max-width:64ch;color:var(--ink-2);font-size:13.5px" },
+      "המפה לא תציג נקודות עד שייטענו פריטי ראיה מקודדים. כדי למלא אותה:"),
+    h("ol", { style:"margin:10px 0;padding-inline-start:20px;font-size:13.5px;line-height:1.9" }, [
+      h("li", {}, [h("code", {}, "node harvest/harvest.mjs probe"), " — אימות הסכימה מול ", h("code", {}, "$metadata")]),
+      h("li", {}, [h("code", {}, "node harvest/harvest.mjs pull --knesset 25"), " — משיכה למטמון"]),
+      h("li", {}, [h("code", {}, "node harvest/build.mjs --knesset 25"), " — תור סקירה אל data/review-queue.csv"]),
+      h("li", {}, "קידוד ידני של direction ו-magnitude בתור הסקירה"),
+      h("li", {}, [h("code", {}, "node harvest/inject.mjs"), " — הזרקת הפנקס המקודד אל האפליקציה"])
+    ]),
+    h("p", { style:"font-size:12.5px;color:var(--ink-3)" },
+      "לבדיקת הממשק בלבד, בלי שום קשר לנתוני אמת, אפשר להוסיף לכתובת את הפרמטר demo=1.")
+  ]);
+  const scr = document.querySelector("#screen-map");
+  scr.insertBefore(notice, scr.firstChild);
+}
+
 function renderCoverage() {
   const c = coverage();
   $("#m-items").textContent  = c.items;
@@ -1217,6 +1289,8 @@ document.addEventListener("DOMContentLoaded", boot);
 if (document.readyState !== "loading") boot();
 function boot() {
   if (booted) return; booted = true;
+  applyDataset();
+  renderBanner();
   initAxisSelects();
   renderWeightControls();
   renderMethod();
