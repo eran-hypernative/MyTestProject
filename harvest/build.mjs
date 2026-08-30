@@ -88,12 +88,16 @@ async function main() {
     posFaction:pick(positions[0], ["FactionID"], { label:"FactionID on position" }),
     posStart:  pick(positions[0], ["StartDate"], { label:"StartDate" }),
     posFinish: pick(positions[0], ["FinishDate","EndDate"], { required:false }),
-    voteId:    pick(votes[0],     ["VoteID","PlenumVoteID","Id"], { label:"VoteID" }),
-    voteDate:  pick(votes[0],     ["VoteDate","SessionDate","Date"], { label:"VoteDate" }),
-    voteTitle: pick(votes[0],     ["SessionItemDsc","Description","Name","ItemDsc","Title"], { label:"vote title" }),
+    voteId:    pick(votes[0],     ["Id","VoteID","PlenumVoteID"], { label:"VoteID" }),
+    voteDate:  pick(votes[0],     ["VoteDateTime","VoteDate","SessionDate"], { label:"VoteDate" }),
+    voteTitle: pick(votes[0],     ["VoteTitle","VoteSubject","SessionItemDsc","Description","Name"], { label:"vote title" }),
+    voteSubj:  pick(votes[0],     ["VoteSubject"], { required:false }),
+    voteFor:   pick(votes[0],     ["ForOptionDesc"], { required:false }),
+    voteAgainst:pick(votes[0],    ["AgainstOptionDesc"], { required:false }),
     resVote:   pick(results[0],   ["VoteID","PlenumVoteID"], { label:"VoteID on result" }),
-    resPerson: pick(results[0],   ["PersonID"], { label:"PersonID on result" }),
-    resValue:  pick(results[0],   ["VoteValue","ResultTypeID","ResultType"], { label:"VoteValue" })
+    resPerson: pick(results[0],   ["MkId","PersonID"], { label:"PersonID on result" }),
+    resValue:  pick(results[0],   ["ResultCode","VoteValue","ResultTypeID"], { label:"vote value" }),
+    resDesc:   pick(results[0],   ["ResultDesc"], { required:false })
   };
   console.log("שדות שזוהו:", JSON.stringify(F, null, 2));
 
@@ -117,12 +121,34 @@ async function main() {
     if (rep?.voteValue?.enumMembers) voteMap = rep.voteValue.enumMembers;
   } catch { /* אין דוח */ }
 
+  /* אין enum ב-$metadata, אבל לכל תוצאה יש ResultDesc. גוזרים את המיפוי
+     מהנתונים עצמם, ומדפיסים אותו לאישור במקום להניח אותו. */
+  const observed = new Map();
+  if (F.resDesc) {
+    for (const r of results) {
+      const code = String(r[F.resValue]), desc = String(r[F.resDesc] ?? "").trim();
+      if (!desc) continue;
+      if (!observed.has(code)) observed.set(code, new Map());
+      const m = observed.get(code);
+      m.set(desc, (m.get(desc) ?? 0) + 1);
+    }
+  }
+  const codeMap = {};
+  for (const [code, descs] of observed) codeMap[code] = [...descs].sort((a,b) => b[1]-a[1])[0][0];
+  if (Object.keys(codeMap).length) {
+    console.log("\nמיפוי ערכי הצבעה שנצפה בנתונים:");
+    for (const [code, desc] of Object.entries(codeMap)) console.log(`  ${code} = ${desc}`);
+    console.log("יש לאשר את המיפוי הזה לפני קידוד.");
+  }
+  const STANCE = { "בעד":"for", "נגד":"against", "נמנע":"abstain" };
+  const stanceOf = code => STANCE[codeMap[String(code)]] ?? null;
+
   const queue = [];
   let unresolved = 0;
   for (const v of votes) {
     const vid = String(v[F.voteId]);
     const date = iso(v[F.voteDate]);
-    const title = norm(v[F.voteTitle]);
+    const title = norm(v[F.voteTitle]) || norm(F.voteSubj ? v[F.voteSubj] : "");
     if (!date) continue;
     const rows = byVote.get(vid) ?? [];
     if (!rows.length) continue;
@@ -152,7 +178,8 @@ async function main() {
         source_url: `https://knesset.gov.il/OdataV4/ParliamentInfo/KNS_PlenumVote(${vid})`,
         source_tier: 1,
         raw_vote_value: topVal,
-        vote_value_label: voteMap ? (Object.entries(voteMap).find(([,val]) => String(val) === topVal)?.[0] ?? "") : "",
+        vote_value_label: codeMap[topVal] ?? "",
+        stance: stanceOf(topVal) ?? "",
         members_voting: vals.length,
         cohesion: cohesion.toFixed(3),
         axis_suggested: axes.join("|"),
@@ -180,7 +207,8 @@ async function main() {
     knesset: KNESSET,
     generated_at: new Date().toISOString(),
     source: "Knesset OData v4 (ParliamentInfo)",
-    vote_value_map_verified: !!voteMap,
+    vote_value_map_verified: !!voteMap || Object.keys(codeMap).length > 0,
+    vote_value_map: codeMap,
     persons: [...personName].map(([person_id, name]) => ({ person_id, name })),
     factions: factions.map(f => ({ faction_id: String(f[F.facId]), name: f[F.facName], letters: null, knesset_num: KNESSET })),
     memberships,
@@ -192,7 +220,7 @@ async function main() {
   console.log(`מתוכן שנויות במחלוקת: ${queue.filter(r => r.contested_topic === "TRUE").length}`);
   console.log(`ללא תיוג ציר אוטומטי: ${queue.filter(r => !r.axis_suggested).length} (העורך יתייג ידנית)`);
   if (unresolved) console.log(`⚠ ${unresolved} תוצאות הצבעה לא שויכו לסיעה בתאריך ההצבעה. יש לבדוק חוסרים ב-KNS_PersonToPosition.`);
-  if (!voteMap) console.log("⚠ קידוד VoteValue לא אומת מול $metadata. ערכי ההצבעה נשמרו גולמיים.");
+  if (!voteMap && !Object.keys(codeMap).length) console.log("⚠ ערכי ההצבעה לא מופו. נשמרו גולמיים.");
   console.log("\nמצב המפה: אפס פריטים מקודדים, ולכן אפס נקודות. זו התצוגה הנכונה עד שהקידוד ייעשה.");
 }
 

@@ -2,7 +2,8 @@
 /* מצפן — הרבסטר. סעיף 7 באפיון.
  *
  *   node harvest/harvest.mjs probe                 בדיקת סכימה בלבד. לא מושך נתונים.
- *   node harvest/harvest.mjs pull --knesset 25     משיכה מלאה למטמון
+ *   node harvest/harvest.mjs size  --knesset 25     כמה שורות יש בחלון, בלי למשוך
+ *   node harvest/harvest.mjs pull  --knesset 25     משיכה למטמון
  *   node harvest/harvest.mjs pull --knesset 25 --force   התעלמות מהמטמון
  *
  * הסקריפט לא מניח שמות שדות. הוא מגלה אותם מ-$metadata, ואם הסכימה השתנתה
@@ -34,6 +35,7 @@ const flag = (name, def) => { const i = args.indexOf(`--${name}`); return i === 
 const has = name => args.includes(`--${name}`);
 const KNESSET = Number(flag("knesset", 25));
 const FORCE = has("force");
+const today = () => new Date().toISOString().slice(0, 10);
 
 function die(err) {
   console.error("\n✖ " + (err?.message ?? err));
@@ -65,13 +67,16 @@ async function probe() {
 
   /* קידוד VoteValue — דרישה מפורשת בסעיף 7.1 */
   if (meta.entityTypes[NEEDED.voteResults]) {
-    const field = resolveField(meta, NEEDED.voteResults, ["VoteValue", "ResultTypeID", "ResultType", "VoteResult"], { required: false });
+    const field = resolveField(meta, NEEDED.voteResults, ["ResultCode", "VoteValue", "ResultTypeID", "ResultType", "VoteResult"], { required: false });
     const type = field ? meta.entityTypes[NEEDED.voteResults].properties[field] : null;
     const enumName = type && type.includes(".") ? type.split(".").pop() : null;
     report.voteValue = { field, type, enumMembers: enumName ? (meta.enums[enumName] ?? null) : null };
-    console.log(`\nVoteValue: field=${field ?? "לא נמצא"} type=${type ?? "-"}`);
+    const descField = resolveField(meta, NEEDED.voteResults, ["ResultDesc"], { required: false });
+    report.voteValue.descField = descField;
+    console.log(`\nערך ההצבעה: field=${field ?? "לא נמצא"} type=${type ?? "-"}`);
     if (report.voteValue.enumMembers) console.log("  enum: " + JSON.stringify(report.voteValue.enumMembers));
-    else console.log("  אין enum ב-$metadata. יש למפות את הערכים מול טבלת קודים לפני קידוד.");
+    else if (descField) console.log(`  אין enum ב-$metadata, אך קיים ${descField}. המיפוי ייגזר מהנתונים עצמם ויוצג לאישור.`);
+    else console.log("  אין enum ואין שדה תיאור. יש למפות ידנית לפני קידוד.");
   }
 
   await mkdir(path.join(ROOT, "data"), { recursive: true });
@@ -83,6 +88,38 @@ async function probe() {
     process.exit(2);
   }
   return meta;
+}
+
+/* ---------------- חלון תאריכים ----------------
+   נגזר מטבלת הסיעות של אותה כנסת, ולא מתאריך שהוקלד מהזיכרון. */
+async function windowFor(meta) {
+  const rows = (await cached(CACHE, NEEDED.factions, async () => {}, { force: false })).rows;
+  const sf = resolveField(meta, NEEDED.factions, ["StartDate"]);
+  const starts = rows.map(r => iso(r[sf])).filter(Boolean).sort();
+  const from = String(flag("from", starts[0] ?? null) ?? "");
+  const to = String(flag("to", today()));
+  if (!from) throw new OdataError("לא ניתן לגזור תאריך פתיחה מטבלת הסיעות. יש להעביר --from");
+  return { from, to };
+}
+
+/* ---------------- size ----------------
+   שואל את השרת כמה שורות יש בחלון, לפני שמושכים משהו. */
+async function size() {
+  const meta = await loadMetadata(V4);
+  const win = await windowFor(meta);
+  const vDate = resolveField(meta, NEEDED.votes, ["VoteDateTime", "VoteDate", "SessionDate"]);
+  const rDate = resolveField(meta, NEEDED.voteResults, ["VoteDate", "VoteDateTime"]);
+  console.log(`חלון: ${win.from} עד ${win.to}`);
+  for (const [label, et, f] of [
+    ["הצבעות", NEEDED.votes, `${vDate} ge ${win.from}T00:00:00Z and ${vDate} le ${win.to}T23:59:59Z`],
+    ["תוצאות", NEEDED.voteResults, `${rDate} ge ${win.from}T00:00:00Z and ${rDate} le ${win.to}T23:59:59Z`]
+  ]) {
+    const url = `${V4}/${et}?$filter=${encodeURIComponent(f)}&$count=true&$top=0`;
+    const body = await get(url);
+    const n = body["@odata.count"] ?? "לא ידוע";
+    console.log(`  ${label}: ${n} שורות` + (typeof n === "number" ? `  (בערך ${Math.ceil(n/100)} עמודים, ${Math.ceil(n/100*0.4/60)} דקות)` : ""));
+  }
+  console.log("\nלצמצום: --from YYYY-MM-DD  או  --to YYYY-MM-DD");
 }
 
 /* ---------------- pull ---------------- */
@@ -108,21 +145,22 @@ async function pull() {
 
   const kf = knessetField(NEEDED.factions);
   const kp = knessetField(NEEDED.positions);
-  const kv = knessetField(NEEDED.votes);
 
   await fetchSet("factions",  { filter: kf ? `${kf} eq ${KNESSET}` : null });
   await fetchSet("persons");
   await fetchSet("positions", { filter: kp ? `${kp} eq ${KNESSET}` : null });
-  await fetchSet("votes",     { filter: kv ? `${kv} eq ${KNESSET}` : null });
 
-  /* תוצאות ההצבעה הן הטבלה הגדולה. מושכים רק את ההצבעות של הכנסת הנבחרת. */
-  const voteIdField = resolveField(meta, NEEDED.voteResults, ["PlenumVoteID", "VoteID", "PlenumSessionVoteID"], { required: false });
-  if (!voteIdField) {
-    console.log("\n⚠ לא זוהה שדה המקשר תוצאה להצבעה. יש לבדוק את דוח הסכימה ידנית.");
-  } else {
-    await fetchSet("voteResults");
-    console.log(`  (קישור תוצאה להצבעה דרך ${voteIdField})`);
-  }
+  /* KNS_PlenumVote ו-KNS_PlenumVoteResult אינם נושאים KnessetNum. בלי חסם הם
+     נמשכים על פני כל הכנסות אי פעם. חוסמים לפי חלון תאריכים שנגזר מהסיעות. */
+  const win = await windowFor(meta);
+  console.log(`  חלון: ${win.from} עד ${win.to}`);
+  const vDate = resolveField(meta, NEEDED.votes, ["VoteDateTime", "VoteDate", "SessionDate"]);
+  const rDate = resolveField(meta, NEEDED.voteResults, ["VoteDate", "VoteDateTime"]);
+  const vFilter = `${vDate} ge ${win.from}T00:00:00Z and ${vDate} le ${win.to}T23:59:59Z`;
+  const rFilter = `${rDate} ge ${win.from}T00:00:00Z and ${rDate} le ${win.to}T23:59:59Z`;
+
+  await fetchSet("votes",       { filter: vFilter });
+  await fetchSet("voteResults", { filter: rFilter, select: "Id,MkId,VoteID,VoteDate,ResultCode,ResultDesc" });
 
   console.log(`\nהמטמון: ${path.relative(ROOT, CACHE)}. הרצה חוזרת לא תמשוך מחדש בלי --force.`);
   console.log("השלב הבא:  node harvest/build.mjs --knesset " + KNESSET);
@@ -130,6 +168,7 @@ async function pull() {
 
 try {
   if (cmd === "probe") await probe();
+  else if (cmd === "size") await size();
   else if (cmd === "pull") await pull();
-  else { console.error(`פקודה לא מוכרת: ${cmd}. השתמש ב-probe או ב-pull.`); process.exit(1); }
+  else { console.error(`פקודה לא מוכרת: ${cmd}. השתמש ב-probe, size או pull.`); process.exit(1); }
 } catch (err) { die(err); }
