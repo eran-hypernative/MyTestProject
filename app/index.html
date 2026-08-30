@@ -276,6 +276,41 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px
   direction: ltr; unicode-bidi: isolate; }
 .formula { display: block; white-space: pre; overflow-x: auto; padding: 10px 12px; background: var(--panel-2); border: 1px solid var(--rule); border-radius: var(--r); margin: 8px 0; direction: ltr; text-align: left; }
 
+/* ---------- מסך הקידוד ---------- */
+.coder { display: grid; grid-template-columns: minmax(0,1fr) 290px; gap: 18px; padding: 14px 0 40px; align-items: start; }
+@media (max-width: 900px) { .coder { grid-template-columns: minmax(0,1fr); } }
+.coder-main { background: var(--panel); border: 1px solid var(--rule); border-radius: var(--r); }
+.coder-head { padding: 12px 16px; border-bottom: 1px solid var(--rule); }
+.coder-prog { display: flex; align-items: center; gap: 12px; margin-top: 6px; font-size: 12.5px; color: var(--ink-2); }
+.coder-prog .track { height: 8px; }
+.ccard { padding: 20px 18px; }
+.ccard .facline { font-size: 12.5px; color: var(--ink-3); }
+.ccard h2 { margin: 4px 0 8px; font-size: 21px; line-height: 1.35; }
+.ccard .facts { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.ccard .axisrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 10px 0 0; border-top: 1px dashed var(--rule-2); font-size: 12.5px; color: var(--ink-2); }
+.poleopt { border: 1px solid var(--rule); border-radius: var(--r); padding: 8px 12px; background: var(--panel-2); font-size: 13.5px; display: flex; align-items: baseline; gap: 8px; }
+.poleopt kbd { font-size: 11px; }
+.poleopt.armed { border-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
+.choices { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.magrow { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.magrow .poleopt { min-width: 78px; justify-content: center; }
+.step2 { opacity: .38; pointer-events: none; }
+.step2.live { opacity: 1; }
+kbd {
+  font-family: ui-monospace, Menlo, monospace; direction: ltr; unicode-bidi: isolate;
+  border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px;
+  padding: 0 5px; background: var(--panel-2); font-size: 11.5px;
+}
+.keymap { background: var(--panel); border: 1px solid var(--rule); border-radius: var(--r); padding: 14px 16px; position: sticky; top: 62px; }
+.keymap p { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; }
+.keymap dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; margin: 12px 0 0; font-size: 12.5px; align-items: baseline; }
+.keymap dt { text-align: left; }
+.keymap dd { margin: 0; color: var(--ink-2); }
+.keymap .hint { font-size: 11.5px; color: var(--ink-3); margin-top: 12px; border-top: 1px solid var(--rule); padding-top: 10px; }
+.coder-done { padding: 30px 18px; text-align: center; }
+.coder-done h2 { margin-bottom: 6px; }
+.coder-done p { color: var(--ink-2); font-size: 13.5px; }
+
 /* ---------- סקטוריאליות ---------- */
 .bars { display: grid; gap: 9px; margin-top: 14px; }
 .barrow { display: grid; grid-template-columns: 190px 1fr 56px; gap: 12px; align-items: center; }
@@ -327,6 +362,7 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px
 <nav class="tabs">
   <div class="wrap" role="tablist">
     <button class="tab" role="tab" data-screen="map" aria-selected="true">המפה</button>
+    <button class="tab" role="tab" data-screen="code" aria-selected="false">קידוד</button>
     <button class="tab" role="tab" data-screen="sector" aria-selected="false">סקטוריאליות</button>
     <button class="tab" role="tab" data-screen="weights" aria-selected="false">משקולות</button>
     <button class="tab" role="tab" data-screen="method" aria-selected="false">מתודולוגיה</button>
@@ -380,6 +416,28 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px
 
       <aside class="drawer" id="drawer">
         <div class="empty">בחר פתק כדי לראות את הראיות שהפיקו את מיקומו.</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ מסך הקידוד ============ -->
+  <section class="screen" id="screen-code" hidden>
+    <div class="coder">
+      <div class="coder-main">
+        <div class="coder-head">
+          <span class="eyebrow">תור הסקירה</span>
+          <div class="coder-prog">
+            <span id="code-count"></span>
+            <div class="track" style="flex:1"><div class="fill" id="code-bar" style="background:var(--accent)"></div></div>
+          </div>
+        </div>
+        <div id="code-card"></div>
+      </div>
+      <aside class="keymap">
+        <span class="eyebrow">מקלדת בלבד</span>
+        <p>שתי הקשות לשורה: קודם כיוון, אחר כך עוצמה.</p>
+        <dl id="keymap-list"></dl>
+        <p class="hint" id="code-storage"></p>
       </aside>
     </div>
   </section>
@@ -1103,6 +1161,191 @@ function renderDrawer() {
   for (const e of sorted) d.appendChild(evidenceCard(e));
 }
 
+
+/* ================================================================
+   מסך הקידוד — סעיף 7.3
+   שתי הקשות לשורה, מקלדת בלבד. אלפי שורות מחייבות זאת.
+   ================================================================ */
+const MAG_KEYS = { "1":20, "2":40, "3":60, "4":80, "5":100 };
+const AXIS_KEYS_MAP = { q:"security", w:"economy", e:"religion_state", r:"governance" };
+const STORE_KEY = "compass.coding.v1";
+
+const coder = { i:0, dir:null, axis:null, done:{}, flagged:{}, hist:[], downloads:undefined };
+
+function loadCoding() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) { const p = JSON.parse(raw); coder.done = p.done || {}; coder.flagged = p.flagged || {}; }
+  } catch { /* אחסון חסום או ריק. ממשיכים בלי. */ }
+}
+function saveCoding() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({ done: coder.done, flagged: coder.flagged, at: Date.now() })); return true; }
+  catch { return false; }
+}
+
+/* התור: פריטים שטרם קודדו, בסדר שסעיף 7.3 קובע */
+function codingQueue() {
+  return EVIDENCE
+    .filter(e => e.direction === null && !coder.flagged[e.id])
+    .sort((a, b) =>
+      (b.contested_topic === true) - (a.contested_topic === true) ||
+      ((b.cohesion ?? 0) - (a.cohesion ?? 0)) ||
+      (a.date === b.date ? 0 : (a.date < b.date ? 1 : -1)));
+}
+function pendingQueue() { return codingQueue().filter(e => !coder.done[e.id]); }
+
+function renderKeymap() {
+  const dl = $("#keymap-list");
+  dl.textContent = "";
+  const rows = [
+    ["f", "כיוון אל הקוטב השלילי"],
+    ["j", "כיוון אל הקוטב החיובי"],
+    ["1 – 5", "עוצמה: עשרים עד מאה"],
+    ["q w e r", "החלפת ציר"],
+    ["s", "דילוג"],
+    ["x", "סימון כלא ניתן לקידוד"],
+    ["u", "ביטול ההקשה האחרונה"],
+    ["d", "ייצוא הקידוד לקובץ"]
+  ];
+  for (const [k, d] of rows) { dl.appendChild(h("dt", {}, [h("kbd", {}, k)])); dl.appendChild(h("dd", {}, d)); }
+}
+
+function renderCoder() {
+  const box = $("#code-card");
+  box.textContent = "";
+  const all = codingQueue(), pend = pendingQueue();
+  const doneN = Object.keys(coder.done).length, flagN = Object.keys(coder.flagged).length;
+  const total = all.length + doneN;
+
+  $("#code-count").textContent = "";
+  $("#code-count").append(h("span", { class:"ltr" }, String(doneN)), document.createTextNode(" מתוך "),
+    h("span", { class:"ltr" }, String(total)), document.createTextNode(" קודדו"),
+    ...(flagN ? [document.createTextNode(" · "), h("span", { class:"ltr" }, String(flagN)), document.createTextNode(" סומנו")] : []));
+  $("#code-bar").style.width = (total ? (doneN / total) * 100 : 0).toFixed(1) + "%";
+
+  const st = $("#code-storage");
+  st.textContent = saveCoding()
+    ? "הקידוד נשמר בדפדפן הזה בלבד. יש לייצא לקובץ כדי לשמור אותו באמת."
+    : "האחסון בדפדפן חסום. יש לייצא לקובץ לפני סגירת העמוד.";
+
+  if (!total) {
+    box.appendChild(h("div", { class:"coder-done" }, [
+      h("h2", {}, "אין תור"),
+      h("p", {}, "לא נטענו פריטים לקידוד. יש להריץ את הצינור, או להוסיף לכתובת את הפרמטר demo=1 כדי לנסות את הממשק.")
+    ]));
+    return;
+  }
+  if (!pend.length) {
+    box.appendChild(h("div", { class:"coder-done" }, [
+      h("h2", {}, "התור נגמר"),
+      h("p", {}, "כל הפריטים בתור קודדו. יש לייצא את הקידוד לקובץ."),
+      h("p", { style:"margin-top:10px" }, [h("kbd", {}, "d"), " לייצוא"])
+    ]));
+    return;
+  }
+
+  if (coder.i >= pend.length) coder.i = 0;
+  const e = pend[coder.i];
+  const axis = coder.axis || e.axis;
+  const A = AXES[axis] || { name:"סקטוריאליות", pos:"סקטוריאלי", neg:"כלל־ציבורי" };
+
+  const card = h("div", { class:"ccard" }, [
+    h("div", { class:"facline" }, (F[e.faction_id]?.name || e.faction_id) + " · " + TYPE_HE[e.type]),
+    h("h2", {}, e.title),
+    h("div", { class:"facts" }, [
+      h("span", { class:"chip ltr" }, fmtDate(e.date)),
+      tierPips(e.source_tier),
+      e.cohesion != null && h("span", { class:"chip" }, ["לכידות ", h("span", { class:"ltr" }, e.cohesion.toFixed(2))]),
+      e.contested_topic && h("span", { class:"chip", style:"border-color:var(--warn);color:var(--warn)" }, "נושא על תפר"),
+      e.source_url && h("span", { class:"srcref ltr" }, e.source_url)
+    ]),
+    e.summary && h("div", { class:"sum", style:"font-size:13px;color:var(--ink-2)" }, e.summary),
+
+    h("div", { class:"axisrow" }, [
+      h("span", {}, "ציר: "), h("strong", {}, A.name),
+      ...Object.entries(AXIS_KEYS_MAP).map(([k, ax]) =>
+        h("span", { class:"poleopt" + (ax === axis ? " armed" : ""), style:"padding:3px 8px;font-size:12px" },
+          [h("kbd", {}, k), AXES[ax].name]))
+    ]),
+
+    h("div", { class:"choices" }, [
+      h("div", { class:"poleopt" + (coder.dir === -1 ? " armed" : "") }, [h("kbd", {}, "f"), A.neg]),
+      h("div", { class:"poleopt" + (coder.dir === +1 ? " armed" : "") }, [h("kbd", {}, "j"), A.pos])
+    ]),
+    h("div", { class:"magrow" + (coder.dir === null ? " step2" : " step2 live") },
+      Object.entries(MAG_KEYS).map(([k, m]) =>
+        h("div", { class:"poleopt" }, [h("kbd", {}, k), h("span", { class:"ltr" }, String(m))])))
+  ]);
+  box.appendChild(card);
+}
+
+function commitCoding(e, dir, mag, axis) {
+  coder.done[e.id] = { direction: dir, magnitude: mag, axis, coded_at: new Date().toISOString().slice(0,10) };
+  coder.hist.push(e.id);
+  coder.dir = null; coder.axis = null;
+  saveCoding();
+  renderCoder();
+}
+
+function onCoderKey(ev) {
+  if (state.screen !== "code") return;
+  if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  const tag = (ev.target.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "select" || tag === "textarea") return;
+  const pend = pendingQueue();
+  const e = pend[coder.i];
+  const k = ev.key.toLowerCase();
+
+  if (k === "d") { ev.preventDefault(); exportCoding(); return; }
+  if (k === "u") {
+    ev.preventDefault();
+    if (coder.dir !== null) { coder.dir = null; renderCoder(); return; }
+    const last = coder.hist.pop();
+    if (last) { delete coder.done[last]; delete coder.flagged[last]; coder.i = 0; saveCoding(); renderCoder(); }
+    return;
+  }
+  if (!e) return;
+  if (k === "s") { ev.preventDefault(); coder.i = (coder.i + 1) % Math.max(1, pend.length); coder.dir = null; renderCoder(); return; }
+  if (k === "x") { ev.preventDefault(); coder.flagged[e.id] = true; coder.hist.push(e.id); coder.dir = null; saveCoding(); renderCoder(); return; }
+  if (AXIS_KEYS_MAP[k]) { ev.preventDefault(); coder.axis = AXIS_KEYS_MAP[k]; renderCoder(); return; }
+  if (k === "f" || k === "j") { ev.preventDefault(); coder.dir = (k === "j" ? +1 : -1); renderCoder(); return; }
+  if (MAG_KEYS[ev.key] !== undefined) {
+    ev.preventDefault();
+    if (coder.dir === null) return;                 /* עוצמה בלי כיוון אינה קידוד */
+    commitCoding(e, coder.dir, MAG_KEYS[ev.key], coder.axis || e.axis);
+  }
+}
+
+function codingCsv() {
+  const cols = ["evidence_id","faction_id","axis_final","direction","magnitude","coded_by","coded_at","status"];
+  const rows = [];
+  for (const [id, v] of Object.entries(coder.done)) {
+    const e = EVIDENCE.find(x => x.id === id);
+    rows.push([id, e ? e.faction_id : "", v.axis, v.direction, v.magnitude, "עורך", v.coded_at, "coded"]);
+  }
+  for (const id of Object.keys(coder.flagged)) {
+    const e = EVIDENCE.find(x => x.id === id);
+    rows.push([id, e ? e.faction_id : "", "", "", "", "עורך", new Date().toISOString().slice(0,10), "uncodeable"]);
+  }
+  const esc = v => { const t = String(v ?? ""); return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+  return "\ufeff" + [cols.join(","), ...rows.map(r => r.map(esc).join(","))].join("\n");
+}
+
+async function exportCoding() {
+  const csv = codingCsv();
+  const name = "compass-coding-" + new Date().toISOString().slice(0,10) + ".csv";
+  const st = $("#code-storage");
+  if (coder.downloads === undefined) {
+    coder.downloads = (window.claude && claude.use) ? await claude.use("downloads").catch(() => null) : null;
+  }
+  if (coder.downloads) {
+    try { await coder.downloads.save({ filename: name, data: csv }); st.textContent = "הקובץ נשלח להורדה: " + name; return; }
+    catch { st.textContent = "ההורדה בוטלה או נכשלה. מנסה העתקה ללוח."; }
+  }
+  try { await navigator.clipboard.writeText(csv); st.textContent = "הקידוד הועתק ללוח. יש להדביק אותו לקובץ."; }
+  catch { st.textContent = "לא ניתן לייצא מכאן. יש לפתוח את העמוד מחוץ למסגרת, או להעתיק ידנית."; }
+}
+
 /* ================================================================
    סקטוריאליות
    ================================================================ */
@@ -1257,12 +1500,13 @@ function renderCoverage() {
   $("#m-cov").innerHTML      = "";
   $("#m-cov").append(document.createTextNode(String(c.pct)), h("small", {}, "%"));
 }
-function renderAll() { renderCoverage(); renderMap(); renderDrawer(); renderSector(); renderDistances(); }
+function renderAll() { renderCoverage(); renderMap(); renderDrawer(); renderSector(); renderDistances(); if (state.screen === "code") renderCoder(); }
 
 function go(screen) {
   state.screen = screen;
   for (const t of $$(".tab[data-screen]")) t.setAttribute("aria-selected", String(t.dataset.screen === screen));
-  for (const s of ["map","sector","weights","method"]) $("#screen-" + s).hidden = (s !== screen);
+  for (const s of ["map","code","sector","weights","method"]) $("#screen-" + s).hidden = (s !== screen);
+  if (screen === "code") renderCoder();
   if (screen === "map") renderMap();
 }
 
@@ -1290,6 +1534,9 @@ if (document.readyState !== "loading") boot();
 function boot() {
   if (booted) return; booted = true;
   applyDataset();
+  loadCoding();
+  renderKeymap();
+  document.addEventListener("keydown", onCoderKey);
   renderBanner();
   initAxisSelects();
   renderWeightControls();
@@ -1313,7 +1560,7 @@ function boot() {
   });
   $("#btn-replay").addEventListener("click", () => renderMap());
   for (const t of $$(".tab[data-screen]")) t.setAttribute("aria-selected", String(t.dataset.screen === "map"));
-  for (const s of ["map","sector","weights","method"]) $("#screen-" + s).hidden = (s !== "map");
+  for (const s of ["map","code","sector","weights","method"]) $("#screen-" + s).hidden = (s !== "map");
   renderAll();
 }
 </script>
