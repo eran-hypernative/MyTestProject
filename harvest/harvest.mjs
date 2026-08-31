@@ -129,18 +129,42 @@ async function pull() {
 
   const knessetField = et => resolveField(meta, et, ["KnessetNum", "KnessetNumber", "Knesset"], { required: false });
 
-  async function fetchSet(role, { filter = null, select = null, limit = Infinity } = {}) {
+  async function fetchSet(role, { filter = null, select = null, cacheName = null, label = null } = {}) {
     const et = NEEDED[role];
+    const name = cacheName ?? et;
+    const tag = label ?? et;
     const parts = [];
     if (filter) parts.push(`$filter=${encodeURIComponent(filter)}`);
     if (select) parts.push(`$select=${encodeURIComponent(select)}`);
     const url = `${V4}/${et}${parts.length ? "?" + parts.join("&") : ""}`;
-    const res = await cached(CACHE, et, async write => {
-      const { rows, pages } = await pageAll(url, { onPage: write, limit });
-      console.log(`  ${et}: ${rows} רשומות ב-${pages} עמודים`);
+    const t0 = Date.now();
+    const res = await cached(CACHE, name, async write => {
+      await pageAll(url, { onPage: async (rows, info) => {
+        await write(rows);
+        if (info.pages % 10 === 0) {
+          const secs = (Date.now() - t0) / 1000;
+          process.stdout.write(`\r  ${tag}: ${info.seen} שורות, ${info.pages} עמודים, ${secs.toFixed(0)} שניות   `);
+        }
+      }});
     }, { force: FORCE });
-    if (res.fromCache) console.log(`  ${et}: ${res.rows.length} רשומות מהמטמון`);
+    process.stdout.write("\r" + " ".repeat(72) + "\r");
+    console.log(`  ${tag}: ${res.rows.length} שורות${res.fromCache ? " (מהמטמון)" : ` ב-${((Date.now()-t0)/1000).toFixed(0)} שניות`}`);
     return res.rows;
+  }
+
+  /* חיתוך לחודשים: קובץ מטמון לכל חודש, כדי שנפילה תעלה חודש אחד ולא הכל,
+     והרצה חוזרת תמשיך מהמקום שבו נעצרה. */
+  function months(from, to) {
+    const out = [];
+    let [y, m] = from.split("-").map(Number);
+    const [ey, em] = to.split("-").map(Number);
+    while (y < ey || (y === ey && m <= em)) {
+      const pad = n => String(n).padStart(2, "0");
+      const [ny, nm] = m === 12 ? [y + 1, 1] : [y, m + 1];
+      out.push({ key: `${y}-${pad(m)}`, start: `${y}-${pad(m)}-01`, end: `${ny}-${pad(nm)}-01` });
+      [y, m] = [ny, nm];
+    }
+    return out;
   }
 
   const kf = knessetField(NEEDED.factions);
@@ -159,8 +183,20 @@ async function pull() {
   const vFilter = `${vDate} ge ${win.from}T00:00:00Z and ${vDate} le ${win.to}T23:59:59Z`;
   const rFilter = `${rDate} ge ${win.from}T00:00:00Z and ${rDate} le ${win.to}T23:59:59Z`;
 
-  await fetchSet("votes",       { filter: vFilter });
-  await fetchSet("voteResults", { filter: rFilter, select: "Id,MkId,VoteID,VoteDate,ResultCode,ResultDesc" });
+  await fetchSet("votes", { filter: vFilter });
+
+  const chunks = months(win.from, win.to);
+  console.log(`  תוצאות ההצבעה, ${chunks.length} חודשים:`);
+  let total = 0;
+  for (const [i, c] of chunks.entries()) {
+    const f = `${rDate} ge ${c.start}T00:00:00Z and ${rDate} lt ${c.end}T00:00:00Z`;
+    const rows = await fetchSet("voteResults", {
+      filter: f, select: "Id,MkId,VoteID,VoteDate,ResultCode,ResultDesc",
+      cacheName: `${NEEDED.voteResults}/${c.key}`, label: `${c.key} (${i + 1}/${chunks.length})`
+    });
+    total += rows.length;
+  }
+  console.log(`  סך הכל ${total} תוצאות הצבעה`);
 
   console.log(`\nהמטמון: ${path.relative(ROOT, CACHE)}. הרצה חוזרת לא תמשוך מחדש בלי --force.`);
   console.log("השלב הבא:  node harvest/build.mjs --knesset " + KNESSET);

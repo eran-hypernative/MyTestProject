@@ -7,7 +7,7 @@
  * מתייג ציר ראשוני לפי מילון מונחים, ומוציא תור סקירה שבו direction ו-magnitude ריקים.
  * הקידוד הוא עבודת אדם. הסקריפט לא ממלא אותו.
  */
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { resolveField, iso } from "./odata.mjs";
@@ -18,9 +18,21 @@ const DATA = path.join(ROOT, "data");
 const arg = (n, d) => { const i = process.argv.indexOf(`--${n}`); return i === -1 ? d : process.argv[i+1]; };
 const KNESSET = Number(arg("knesset", 25));
 
+const readLines = async f => (await readFile(f, "utf8")).split("\n").filter(Boolean).map(l => JSON.parse(l));
 async function jsonl(name) {
-  try { return (await readFile(path.join(CACHE, `${name}.jsonl`), "utf8")).split("\n").filter(Boolean).map(l => JSON.parse(l)); }
-  catch { throw new Error(`המטמון ${name}.jsonl חסר. הרץ קודם: node harvest/harvest.mjs pull --knesset ${KNESSET}`); }
+  /* ישות עשויה להיות שמורה כקובץ אחד או כתיקייה של חודשים */
+  try { return await readLines(path.join(CACHE, `${name}.jsonl`)); } catch { /* אולי מחולק */ }
+  try {
+    const dir = path.join(CACHE, name);
+    const files = (await readdir(dir)).filter(f => f.endsWith(".jsonl")).sort();
+    if (!files.length) throw new Error("empty");
+    const out = [];
+    for (const f of files) out.push(...await readLines(path.join(dir, f)));
+    console.log(`  ${name}: ${out.length} שורות מ-${files.length} קבצים`);
+    return out;
+  } catch {
+    throw new Error(`המטמון ${name} חסר. הרץ קודם: node harvest/harvest.mjs pull --knesset ${KNESSET}`);
+  }
 }
 /* בוחר שדה לפי שמות מועמדים, מתוך רשומה אמיתית ולא מתוך הנחה */
 function pick(row, candidates, { required = true, label = "" } = {}) {

@@ -118,8 +118,8 @@ export async function pageAll(url, { onPage, limit = Infinity } = {}) {
 }
 
 export async function cached(cacheDir, name, producer, { force = false } = {}) {
-  await mkdir(cacheDir, { recursive: true });
   const file = path.join(cacheDir, `${name}.jsonl`);
+  await mkdir(path.dirname(file), { recursive: true });
   const part = file + ".part";
   await rm(part, { force: true });          /* שארית מהרצה שנקטעה */
   if (!force) {
